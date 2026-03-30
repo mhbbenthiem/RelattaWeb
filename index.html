@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatta</title>
+    <style>
+        /* Overlay de transição ao avançar para a próxima tela */
+        .transition-overlay{
+        position:fixed; inset:0; z-index:1500;
+        background:rgba(0,0,0,.45);
+        display:none; align-items:center; justify-content:center;
+        animation: fadeIn .2s ease;
+        }
+        .transition-card{
+        width:min(560px, 92vw); background:#fff; border-radius:14px;
+        padding:24px; box-shadow:0 12px 30px rgba(0,0,0,.25);
+        text-align:center;
+        }
+        .transition-title{ font-size:18px; font-weight:700; color:#333; margin-top:12px; }
+        .transition-sub{ color:#666; margin-top:6px; }
+        .progress-wrap{ margin-top:16px; text-align:left; }
+        .progress-bar{
+        height:10px; background:#e9ecef; border-radius:999px; overflow:hidden;
+        }
+        .progress-fill{
+        height:100%; width:0%;
+        background:linear-gradient(90deg,#62b354,#6362c5);
+        transition: width .25s ease;
+        }
+        .small-hint{ font-size:12px; color:#777; margin-top:8px; }
+
+        /* spinner + animações */
+        .spinner{
+        width:36px; height:36px;
+        border:4px solid #e9ecef;
+        border-top-color:#6362c5;
+        border-radius:50%;
+        margin:0 auto;
+        animation:spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #434276;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 16px;
+        }
+
+        select, textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 16px;
+            background-color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, textarea:focus, input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary {
+            background-color: #62b354;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: #74af6a;
+        }
+
+        .btn-secondary {
+            background-color: #b8b7b5;
+            color: #000;
+        }
+
+        .btn-secondary:hover {
+            background-color: #dfdfdd;
+        }
+
+        .btn-danger {
+            background-color: #FF7F7F;
+            color: #000;
+        }
+
+        .btn-danger:hover {
+            background-color: #FF9999;
+        }
+
+        .btn-gray {
+            background-color: #b8b7b5;
+            color: black;
+        }
+
+        .btn-gray:hover {
+            background-color: #dfdfdd;
+        }
+
+        .btn-pdf {
+            background: #62b354;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-pdf:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .screen {
+            display: none;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .info-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            color: #495057;
+            border-left: 4px solid #807f7d;
+        }
+
+        .result-area {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .hidden-field {
+            display: none;
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .conditional-fields {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #cfade6;
+        }
+
+        .perfil-turma-field {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .perfil-turma-field.readonly {
+            background: #f5f5f5;
+            border-left-color: #9e9e9e;
+        }
+
+        .perfil-turma-field .label-special {
+            color: #e65100;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .perfil-turma-field.readonly .label-special {
+            color: #666;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4ca8af;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .conselho-header {
+            background: linear-gradient(135deg, #62b354 0%, #6362c5 100%);
+            color: black;
+            padding: 30px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            margin-bottom: 0;
+        }
+
+        .conselho-header h1 {
+            color: white;
+            margin: 0;
+            font-size: 32px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .conselho-subtitle {
+            margin-top: 10px;
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .conselho-controls {
+            background: white;
+            padding: 25px;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .controls-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .ficha-container {
+            margin-bottom: 40px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .ficha-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .student-header {
+            background: linear-gradient(135deg, #62b354 0%, #6362c5 100%);
+            color: white;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .student-photo {
+            flex-shrink: 0;
+        }
+
+        .photo-placeholder {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .student-info {
+            flex-grow: 1;
+        }
+
+        .student-info h2 {
+            margin: 0 0 15px 0;
+            font-size: 28px;
+            font-weight: 600;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .student-details {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .detail-item {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        .perfil-turma-info {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .trimestres-container {
+            display: flex;
+            min-height: 400px;
+        }
+
+        .trimestre {
+            flex: 1;
+            border-right: 2px solid #e9ecef;
+            padding: 0;
+        }
+
+        .trimestre:last-child {
+            border-right: none;
+        }
+
+        .trimestre-title {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            margin: 0;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #e9ecef;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .trimestre-content {
+            padding: 20px;
+            min-height: 350px;
+            background: #fafafa;
+        }
+
+        .materia-item {
+            background: white;
+            border-left: 4px solid #434276;
+            padding: 18px;
+            margin-bottom: 15px;
+            border-radius: 0 12px 12px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .materia-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border-left-color: #434276;
+        }
+
+        .materia-nome {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .materia-descricao {
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .professor-info {
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
+        .empty-message {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .export-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid #dee2e6;
+        }
+
+        .export-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .email-input {
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+        }
+
+        .ficha-turma-completa {
+            margin-top: 30px;
+        }
+
+        .turma-info-header {
+            background: linear-gradient(135deg, #62b354 0%, #6362c5 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+        }
+
+        .turma-info-header h2 {
+            margin: 0;
+            font-size: 24px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .alunos-count {
+            margin-top: 10px;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+
+            .controls-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .student-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .student-photo {
+                margin-bottom: 15px;
+            }
+
+            .trimestres-container {
+                flex-direction: column;
+            }
+
+            .trimestre {
+                margin-bottom: 20px;
+                border-right: none;
+                border-bottom: 2px solid #e9ecef;
+            }
+
+            .trimestre:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        /* CORREÇÃO 1: Estilos para melhor feedback visual */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading-text {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .cards-grid{
+        display:grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap:12px;
+        margin-top:12px;
+        }
+        .card-resumo{
+        border:1px solid #020202;
+        border-radius:12px;
+        padding:12px;
+        background:#fff;
+        box-shadow:0 1px 2px rgba(0,0,0,.04);
+        }
+        .card-head{
+        display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;
+        }
+        .badge{
+        padding:2px 8px; border:1px solid #e5e7eb; border-radius:9999px; background:#f9fafb; font-size:12px;
+        }
+        .card-meta{ font-size:12px; opacity:.75; }
+        .card-desc{
+        white-space:pre-wrap; /* mantém quebras e espaçamentos da descrição */
+        margin-top:8px; line-height:1.4;
+        }
+        .btn-sm{ font-size:12px; padding:4px 8px; border:1px solid #f7f30f; border-radius:6px; background:#f9fafb; cursor:pointer; }
+        .btn-sm:hover{ background:#f0ed3a; }
+    </style>
+</head>
+<!-- Overlay de transição entre telas -->
+<div id="transition-overlay" class="transition-overlay" role="alert" aria-live="polite" aria-busy="true">
+  <div class="transition-card">
+    <div class="spinner" style="margin-bottom:10px;"></div>
+    <div id="transition-title" class="transition-title">Carregando dados…</div>
+    <div id="transition-sub" class="transition-sub">Preparando alunos e componentes curriculares.</div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+      <div id="progress-text" class="small-hint">0%</div>
+    </div>
+  </div>
+</div>
+<body>
+    <div class="container">
+        
+        <!-- Tela de Carregamento -->
+        <div id="loading-screen" class="screen active">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <h2>Carregando dados...</h2>
+                <p>Aguarde enquanto conectamos com o servidor e carregamos os dados.</p>
+                <div class="progress-wrap" style="max-width: 300px; margin: 20px auto;">
+                    <div class="progress-bar"><div id="init-progress-fill" class="progress-fill"></div></div>
+                    <div id="init-progress-text" class="small-hint">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Erro -->
+        <div id="error-screen" class="screen">
+            <h1>Erro ao Carregar Dados</h1>
+            <div class="alert alert-error" id="error-message">
+                Não foi possível carregar os dados do servidor.
+            </div>
+            <div class="button-group" style="flex-direction: column;">
+                <button class="btn btn-primary" onclick="inicializarSistema()">Tentar Novamente</button>
+            </div>
+        </div>
+        
+        <!-- Tela Menu Principal -->
+        <div id="menu-screen" class="screen">
+            <h1>Preenchimento de fichas para Conselho de Classe</h1>
+            <p style="text-align: center; margin-bottom: 30px; color: #666;">Bem-vindo! O que deseja fazer?</p>
+            
+            <div class="button-group" style="flex-direction: column;">
+                <button class="btn btn-primary" onclick="showScreen('form1-screen')">Preencher aluno</button>
+                <button class="btn btn-secondary" onclick="showScreen('resumo-screen')">Acompanhamento do preenchimento</button>
+                <button class="btn btn-secondary" onclick="showScreen('conselho-screen')">Emitir Ficha para Conselho</button>
+                <button class="btn btn-secondary" onclick="showScreen('exportar-excel-screen')">Exportar respostas (.xlsx)</button>
+            </div>
+        </div>
+
+        <!-- Tela Formulário 1 - Dados Básicos -->
+        <div id="form1-screen" class="screen">
+            <h1>Dados Básicos</h1>
+            
+            <div class="form-group">
+                <label for="nome">Nome:</label>
+                <select id="nome" onchange="updateFuncao()">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ano">Ano:</label>
+                <select id="ano" onchange="updateTurmas()">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="turno">Turno:</label>
+                <select id="turno">
+                    <option value="">Selecione...</option>
+                    <option value="Manhã">Manhã</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Integral">Integral</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="turma">Turma:</label>
+                <select id="turma">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="funcao">Função:</label>
+                <select id="funcao" disabled>
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="nextToForm2()">Próximo</button>
+                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+            </div>
+        </div>
+
+        <!-- Tela Formulário 2 - Seleção de Estudante -->
+        <div id="form2-screen" class="screen">
+            <h1>Selecionar Estudante</h1>
+            
+            <div id="info-display" class="info-display"></div>
+
+            <div id="perfil-turma-section" class="perfil-turma-field hidden-field">
+                <label class="label-special" for="perfil-turma">
+                     Perfil da Turma:
+                    <span id="perfil-status"></span>
+                </label>
+                <textarea id="perfil-turma" placeholder="Descreva o perfil geral da turma (características, comportamento, necessidades específicas, etc.)"></textarea>
+                <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                     Este campo é preenchido apenas uma vez por turma e será replicado automaticamente nos próximos preenchimentos.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="aluno">Estudante:</label>
+                <select id="aluno" onchange="showConditionalFields()">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="materia">Componente Curricular:</label>
+                <select id="materia">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+
+            <div id="conditional-fields" class="conditional-fields hidden-field">
+
+                <div class="form-group">
+                    <label for="papi">PAPI?</label>
+                    <select id="papi">
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="inclusao">Inclusão?</label>
+                    <select id="inclusao">
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                    </select>
+                </div>
+            </div>
+            <div id="texto-padrao-wrapper" class="form-group hidden-field">
+            <label>Critérios de avaliação</label>
+            <div id="texto-padrao" class="materia-descricao" aria-live="polite"></div>
+            </div>
+            <div class="form-group">
+                <label for="descricao">Descrição:</label>
+                <textarea id="descricao" placeholder="Digite aqui uma descrição..."></textarea>
+            </div>
+
+            <div class="button-group">
+                 <button class="btn btn-primary" onclick="finalizarPreenchimento()">Salvar</button>
+                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+            </div>
+        </div>
+
+        <!-- Tela Final -->
+        <div id="final-screen" class="screen">
+            <h1>Sucesso!</h1>
+            <div class="alert alert-info">
+                <strong>Obrigado!</strong> Registrado com sucesso!
+            </div>
+
+            <div class="button-group" style="flex-direction: column;">
+                <button class="btn btn-primary" onclick="continuarPreenchendo()">Continuar preenchendo</button>
+                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+            </div>
+        </div>
+
+        <!-- Tela Resumo  -->
+        <div id="resumo-screen" class="screen">
+            <h1>Resumo de Preenchimentos</h1>
+            
+            <div class="form-group">
+                <label for="professor-resumo">Selecione o nome da professora:</label>
+                <select id="professor-resumo">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+
+            <input type="hidden" id="row-index" value="">
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="buscarResumo()" id="btn-buscar">Buscar Resumo</button>
+            </div>
+
+            <div id="resumo-loading" class="loading-text" style="display:none;">
+                Carregando resumo...
+            </div>
+
+            
+            <div id="cards-resumo" class="cards-grid"></div>
+
+
+            <div class="button-group">
+                <button class="btn btn-danger" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+            </div>
+        </div>
+        <!-- Tela Exportar Excel -->
+        <div id="exportar-excel-screen" class="screen">
+        <h1>Exportar Excel (.xlsx)</h1>
+        <p style="text-align:center; color:#666; margin-bottom:16px;">
+            Escolha qualquer combinação de filtros (deixe em branco se não quiser filtrar).
+        </p>
+
+        <div class="form-group">
+            <label for="f_professor">Professor(a)</label>
+            <select id="f_professor">
+            <option value="">(todos)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="f_trimestre">Trimestre</label>
+            <select id="f_trimestre">
+            <option value="">(todos)</option>
+            <option value="1">1º</option>
+            <option value="2">2º</option>
+            <option value="3">3º</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="f_materia">Componente Curricular</label>
+            <select id="f_materia">
+            <option value="">(todas)</option>
+            <option>Língua Portuguesa</option>
+            <option>Matemática</option>
+            <option>História</option>
+            <option>Geografia</option>
+            <option>Ciências</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="f_turno">Turno</label>
+            <select id="f_turno">
+            <option value="">(todos)</option>
+            <option>Manhã</option>
+            <option>Tarde</option>
+            <option>Integral</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="f_turma">Turma <small>(ex.: “1º Ano A” ou “1º A”)</small></label>
+            <input id="f_turma" placeholder="ex.: 1º Ano A" />
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="exportarExcel()">Exportar Excel</button>
+            <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+        </div>
+        </div>
+
+
+        <!-- Tela Conselho de Classe -->
+        <div id="conselho-screen" class="screen">
+            <div class="conselho-header">
+                <h1>📋 Ficha para Conselho de Classe</h1>
+                <div class="conselho-subtitle">Visualização completa dos relatórios por turma</div>
+            </div>
+            
+            <div class="conselho-controls">
+                <div class="controls-row">
+                    <div class="form-group">
+                        <label for="turma-conselho">Selecione a turma:</label>
+                        <select id="turma-conselho">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="turno-conselho">Selecione o turno:</label>
+                        <select id="turno-conselho">
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Integral">Integral</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="carregarFichasTurma()" id="btn-buscar-turma">
+                        🔍 Buscar Alunos
+                    </button>
+
+                    <button class="btn btn-pdf" onclick="abrirModalPDF()" id="btn-exportar" style="display:none;">
+                         Exportar PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status e mensagens -->
+            <div id="conselho-status" class="alert" style="display:none;"></div>
+            <div id="conselho-loading" class="loading-text" style="display:none;">
+                Carregando dados da turma...
+            </div>
+
+            <!-- Área de exibição das fichas -->
+            <div id="ficha-turma-completa" class="ficha-turma-completa" style="display:none;">
+                <div class="turma-info-header">
+                    <h2 id="turma-titulo">Relatórios da Turma</h2>
+                    <div class="alunos-count" id="alunos-count">0 alunos encontrados</div>
+                    <div id="perfil-turma-display" class="perfil-turma-info" style="display:none;"></div>
+                </div>
+                <div id="fichas-container"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-danger" onclick="showScreen('menu-screen')">🏠 Voltar ao Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para inserir email -->
+    <div id="modal-email" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalPDF()">&times;</span>
+            <h3> Exportar PDF por Email</h3>
+            <div class="form-group">
+                <label for="email-destinatario">Digite seu email:</label>
+                <input type="email" id="email-destinatario" placeholder="seu.email@exemplo.com" required>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="exportarPDF()">✉️ Enviar PDF</button>
+                <button class="btn btn-gray" onclick="fecharModalPDF()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    function obterTrimestreAtual(date = new Date()) {
+    const m = date.getMonth() + 1; 
+    if (m >= 2 && m <= 5)  return "1";
+    if (m >= 6 && m <= 9)  return "2";
+    return "3";
+    }
+    </script>
+    <script>
+    // filtro trimestre -> ano -> matéria
+    const TEXTOS_PADRAO_MATERIA = {
+    "1": {
+        "1": {
+        "Ciências": "Compara características de materiais do cotidiano (cor, brilho, odor, sabor, textura, transparência, temperatura e forma); \nidentifica atitudes de preservação ambiental e descarte correto; \nlocaliza e nomeia partes do corpo (órgãos dos sentidos, cabeça, pescoço, tronco, membros) e explica funções; \nreconhece hábitos saudáveis, autocuidado e respeito às diferenças; \nidentifica objetos/tecnologias que ampliam sentidos; identifica escalas de tempo (dia, semana, mês, ano); \ncaracteriza céu e astros visíveis; \nreconhece o Sol como fonte natural de luz e calor.",
+        "Geografia": "Localiza pessoas/objetos nos espaços de vivência usando referenciais (dentro/fora, ao lado, frente/trás, perto/longe, cima/baixo, antes/depois, entre, junto/separado); \nreconhece e elabora símbolos de objetos do espaço vivido; \ndescreve a paisagem e a ação humana nas transformações; \nassocia vestuário/hábitos à variação de temperatura/umidade; \nidentifica grupos sociais (família, escola, comunidade) e atividades; reconhece diversidade humana e situações de preconceito.",
+        "História": "Narra a própria identidade e história de vida; \ndescreve cotidiano de crianças hoje (família, escola, comunidade); \nnarra manifestações culturais dos grupos de convívio; \ncompara modos de viver de crianças em diferentes tempos e espaços a partir de fontes; narra regras, direitos e responsabilidades na família, escola e comunidade.",
+        "Matemática": "Lê/registra números até 10 e relaciona às quantidades; \nconta elementos de coleções, compara, ordena e classifica; \nresolve adição/subtração com resultados até 10; \norienta-se/desloca-se no espaço por um ponto de referência; \nclassifica/ordena por atributos; \nidentifica períodos do dia, dias da semana, meses, datas; \ncompara/ordena comprimentos; \ninvestiga situações de interesse e registra. \nAmpliações ao longo do ano: até 30, ideias iniciais de multiplicação/divisão, leitura de quadros/gráficos simples.",
+        "Língua Portuguesa": "Respeita turnos de fala; \nparticipa de leituras e escritas coletivas; \nreconhece o alfabeto; \nexpressa ideias com clareza; \nlê palavras e frases; \nestabelece relação som–letra; \nescreve palavras e frases; \nrecita textos da tradição oral com entonação adequada; \nreconhece a mesma palavra em diferentes tipos de letra."
+        },
+        "2": {
+        "Ciências": "Identifica materiais (metais, madeira, vidro, plástico) e seus usos considerando propriedades (flexibilidade, dureza, transparência; permeável/impermeável); compreende redução de desperdício e tecnologias que minimizam impactos; diferencia seres vivos (animais, plantas, fungos, bactérias) de componentes não vivos (ar, água, solo, rochas, luz, calor do Sol); identifica partes das plantas e funções; descreve posições do Sol e sombras; identifica cuidados com exposição solar e tecnologias de proteção; compara efeito da radiação solar em diferentes superfícies (água, areia, solo; claras/escuras/metálicas).",
+        "Geografia": "Localiza elementos na sala com referenciais (inclui direita/esquerda); reconhece objetos e lugares da escola/entorno em mapas, imagens aéreas e fotos; desenha espaços de vivência com proporcionalidade e localização correta; compara costumes e tradições da comunidade e respeita diferenças; descreve paisagens (construções, funções, placas e sinalizações); compara meios de transporte/comunicação e discute riscos/uso responsável.",
+        "História": "Compara sua infância com a de outros tempos usando fontes (objetos, documentos, fotos); narra modos de viver de crianças em diferentes tempos (morar, brincar, estudar, comunicar-se, locomover-se) e identifica mudanças/permanências; explica formas de organização de grupos (família, escola, povos originários, quilombolas) a partir de fontes; narra direitos e responsabilidades com base em documentos (DUDC, ECA); narra formas de trabalho e impactos ambientais na comunidade.",
+        "Matemática": "Lê/registra/compara números até 100; conta por agrupamentos e reconhece valor posicional; resolve adição e subtração até 100; classifica/ordena por atributos; lê/registra datas e meses; mede/estima/compara comprimentos (unidades não convencionais e convencionais); localiza/desloca-se com múltiplos referenciais; lê/constrói quadros e gráficos de barras/colunas; ampliações: até 1000, operações até centenas, ideias iniciais de multiplicação e divisão, leitura de horas (hora/meia), massa e sistema monetário.",
+        "Língua Portuguesa": "Participa de interações orais (ouvir, contar, recontar); lê pequenos textos; explora rimas e aliterações; escreve pequenos textos; expressa ideias com sequência lógica; localiza informações explícitas; reconhece variações som–letra; mantém unidade temática; identifica finalidade/assunto; usa espaçamento entre palavras."
+        },
+        "3": {
+        "Ciências": "Identifica fontes de som naturais/artificiais e hábitos de saúde auditiva; relaciona fontes de luz com objetos transparentes/opacos e hábitos para saúde dos olhos; diferencia fontes de calor, materiais condutores/isolantes e tecnologias (isolamento/termômetros); descreve ciclos de vida e modos de vida dos animais (inclusive humanos); compara animais por características externas; reconhece animais que podem causar acidentes/doenças; identifica características da Terra com representações (mapas, globos, fotos) e registra visibilidade de astros; explica formação/composição do solo; compreende atmosfera e vento.",
+        "Geografia": "Elabora/representa trajetos com desenhos; utiliza planta simples/mapa para localizar elementos; lê legenda; reconhece paisagens de Curitiba e entorno; compreende Curitiba como espaço urbano e suas atividades produtivas; reconhece diversidade humana e contribuições étnicas; reconhece modos de vida de povos e comunidades tradicionais.",
+        "História": "Constrói narrativas sobre patrimônio histórico, cultural e ambiental de Curitiba; compara espaços públicos e privados do município; narra ocupação e povoamento de Curitiba (bandeirantes, negros, imigrantes) a partir de fontes; narra diversidade cultural (povos originários, portugueses, africanos, imigrantes); interpreta direitos e responsabilidades na cidade (leis ambientais, trânsito, poderes); interpreta símbolos municipais (hino, bandeira, brasão).",
+        "Matemática": "Lê/escreve números até 1000; compreende SND até 3ª ordem; estima/aproxima/cálculo mental; constrói significados de multiplicações (2 a 6); resolve adição/subtração; organiza sequências por adições/subtrações sucessivas e descreve a regra; mede comprimentos (m, cm, mm); lê/constrói gráficos e interpreta tabelas simples/dupla entrada; ampliações: ordinais até 30; multiplicações de 2 a 10; problemas com dobro/triplo/metade/terça; horas (hora, meia e 15 min); sistema monetário.",
+        "Língua Portuguesa": "Formula/responde questões orais; ativa conhecimentos prévios; amplia vocabulário em escrita; acentua palavras; adequa a fala a situações; infere informações; pontua textos; produz textos coerentes; defende ponto de vista oralmente; estabelece relações entre partes do texto; segmenta corretamente palavras; usa concordância nominal."
+        },
+        "4": {
+        "Ciências": "Identifica misturas do cotidiano; relata transformações de materiais (aquecimento, resfriamento, luz, umidade); reconhece a célula como unidade básica; diferencia uni/pluricelulares; constrói cadeias alimentares simples e reconhece o papel do Sol; reconhece microrganismos, doenças associadas e relações com ambiente/sociedade/tecnologia; reconhece direções cardeais via Sol/sombra (gnômon); associa ciclos da Lua/Terra a períodos e calendários; identifica componentes do Sistema Solar e características dos planetas.",
+        "Geografia": "Usa direções cardeais para orientação (mapas, croquis, maquetes, espaço geográfico); compreende mapa como representação reduzida (escala); compara mapas e outras representações (globo, maquetes, plantas, croquis); descreve processos migratórios e contribuições; conhece paisagens do Paraná (relevo, vegetação, rios, clima e relações); identifica intervenções humanas (urbanização, desmatamento, poluição); compreende atividades produtivas nos espaços urbano/rural (setores econômicos); reconhece interdependência campo–cidade (fluxos).",
+        "História": "Narra primeiras formações sociais a partir de fontes; narra mudanças/permanências (nomadismo/sedentarismo, agricultura/pastoreio, escrita, circulação); orienta-se temporalmente sobre ocupação/povoamento do Brasil/Paraná (povos originários, presença africana, imigrantes, migrantes); explica diversidade cultural como resultado de ações de diferentes povos; interpreta direitos e responsabilidades no Paraná (leis, terras indígenas/quilombolas, patrimônio); constrói narrativa sobre símbolos estaduais (hino, bandeira, brasão).",
+        "Matemática": "Lê/escreve números até 10.000; SND até 4ª ordem; estima, arredonda e calcula mentalmente; multiplicações de 2 a 10; resolve adição/subtração e multiplicação/divisão; identifica regularidades; mede comprimentos, massa e capacidade (unidades convencionais); localiza/desloca objetos com linguagem geométrica; interpreta tabelas/dupla entrada e gráficos; ampliações: frações, temperaturas, medidas de tempo, sólidos e planificações, coleta e representação de dados.",
+        "Língua Portuguesa": "Reconhece características da conversação espontânea e formas de tratamento; identifica ideia central; analisa/usa concordância verbal; usa expressividade na fala; infere significados por contexto; reconhece e usa elementos coesivos; expõe oralmente com roteiro; estabelece relações de causa e consequência; respeita convenções ortográficas regulares; organiza a produção segundo o gênero."
+        },
+        "5": {
+        "Ciências": "Reconhece propriedades físicas de materiais (densidade, condutividade térmica/eléctrica, magnetismo, solubilidade, dureza/elasticidade etc.); explica ciclo da água e implicações (agricultura, clima, energia, água potável, ecossistemas); identifica usos da água/materiais e propõe consumo consciente, descarte/reutilização/reciclagem; reconhece corpo humano como sistema integrado (células, tecidos, órgãos, sistemas) e sistemas ligados à nutrição; entende grupos alimentares e influência da mídia; identifica constelações; reconhece rotação/translação e estações; reconhece fases da Lua e suas influências; conhece tecnologias para estudo do Universo (luneta, telescópio) e agências (AEB, NASA).",
+        "Geografia": "Lê/interpreta mapas (símbolos, orientação, legenda, título, subtítulo, fonte, escala); analisa dinâmicas populacionais no Paraná (migrações/infraestrutura); identifica diferenças étnico-raciais/culturais e desigualdades; conhece paisagens do Brasil (relevo, vegetação, rios, clima e ação humana); identifica e propõe soluções a problemas socioambientais locais; analisa transformações urbanas por imagens aéreas/satélite; identifica funções das cidades e mudanças sociais/econômicas/ambientais; compara mudanças do trabalho e desenvolvimento tecnológico; identifica tipos de energia no cotidiano e produção.",
+        "História": "Argumenta sobre povos nômades/sedentários e migrações; explica modos de vida dos povos originários (Brasil/Paraná); narra significado de cidadania em diferentes contextos; relaciona cidadania a respeito à diversidade e direitos humanos; explica primeiros contatos (originários, europeus, africanos); narra formas de exploração econômica e impactos (pau-brasil, cana, mineração); interpreta movimentos de resistência (Inconfidência, Conjuração Baiana, Emancipação do PR, Federalista, Contestado); narra movimentos sociais/políticos/culturais do Paraná; argumenta sobre patrimônio material/imaterial; narra tradições orais e símbolos nacionais.",
+        "Matemática": "Lê/escreve números de diferentes magnitudes; compõe/decompõe no SND; estima/arredonda/cálculo mental; reconhece pares/ímpares; resolve adição/subtração e multiplicação/divisão; regularidades por ×/÷ por 1,10,100,1000; mede comprimentos, massa, capacidade (com transformações); localiza/desloca com vários referenciais (inclui coordenadas); interpreta tabelas e gráficos (linhas, pictóricos, barras/colunas); frações/decimais: representa, compara, ordena; opera com naturais e racionais (adição/subtração/multiplicação/divisão); propriedades de igualdade; intervalos de tempo; sistema monetário; figuras planas; média aritmética; frações equivalentes; percentuais usuais; perímetro/área de retângulos; ampliação/redução com proporcionalidade; probabilidade simples.",
+        "Língua Portuguesa": "Usa expressividade na fala; distingue fato de opinião; relaciona título e texto; produz textos adequados à situação comunicativa; reconhece e respeita modos de falar; identifica ironia/humor; argumenta em produções escritas; usa hifenização na translineação; defende ponto de vista; lê com proficiência; respeita convenções ortográficas irregulares; escreve adequando-se ao gênero e ao contexto."
+        }
+    },
+    "2": {
+        "1": {
+        "Ciências": "Compara características de materiais do cotidiano (cor, brilho, odor, sabor, textura, transparência, temperatura e forma); identifica atitudes de preservação ambiental e descarte correto; localiza e nomeia partes do corpo (órgãos dos sentidos, cabeça, pescoço, tronco, membros) e explica funções; reconhece hábitos saudáveis, autocuidado e respeito às diferenças; identifica objetos/tecnologias que ampliam sentidos; identifica escalas de tempo (dia, semana, mês, ano); caracteriza céu e astros visíveis; reconhece o Sol como fonte natural de luz e calor.",
+        "Geografia": "Localiza pessoas/objetos nos espaços de vivência usando referenciais (dentro/fora, ao lado, frente/trás, perto/longe, cima/baixo, antes/depois, entre, junto/separado); reconhece e elabora símbolos de objetos do espaço vivido; descreve a paisagem e a ação humana nas transformações; associa vestuário/hábitos à variação de temperatura/umidade; identifica grupos sociais (família, escola, comunidade) e atividades; reconhece diversidade humana e situações de preconceito.",
+        "História": "Narra a própria identidade e história de vida; \ndescreve cotidiano de crianças hoje (família, escola, comunidade); \nnarra manifestações culturais dos grupos de convívio; \ncompara modos de viver de crianças em diferentes tempos e espaços a partir de fontes; \nnarra regras, direitos e responsabilidades na família, escola e comunidade.",
+        "Matemática": "Lê/registra números até 10 e relaciona às quantidades; conta elementos de coleções, compara, ordena e classifica; resolve adição/subtração com resultados até 10; orienta-se/desloca-se no espaço por um ponto de referência; classifica/ordena por atributos; identifica períodos do dia, dias da semana, meses, datas; compara/ordena comprimentos; investiga situações de interesse e registra. Ampliações ao longo do ano: até 30, ideias iniciais de multiplicação/divisão, leitura de quadros/gráficos simples.",
+        "Língua Portuguesa": "Respeita turnos de fala; participa de leituras e escritas coletivas; reconhece o alfabeto; expressa ideias com clareza; lê palavras e frases; estabelece relação som–letra; escreve palavras e frases; recita textos da tradição oral com entonação adequada; reconhece a mesma palavra em diferentes tipos de letra."
+        },
+        "2": {
+        "Ciências": "Identifica materiais (metais, madeira, vidro, plástico) e seus usos considerando propriedades (flexibilidade, dureza, transparência; permeável/impermeável); compreende redução de desperdício e tecnologias que minimizam impactos; diferencia seres vivos (animais, plantas, fungos, bactérias) de componentes não vivos (ar, água, solo, rochas, luz, calor do Sol); identifica partes das plantas e funções; descreve posições do Sol e sombras; identifica cuidados com exposição solar e tecnologias de proteção; compara efeito da radiação solar em diferentes superfícies (água, areia, solo; claras/escuras/metálicas).",
+        "Geografia": "Localiza elementos na sala com referenciais (inclui direita/esquerda); reconhece objetos e lugares da escola/entorno em mapas, imagens aéreas e fotos; desenha espaços de vivência com proporcionalidade e localização correta; compara costumes e tradições da comunidade e respeita diferenças; descreve paisagens (construções, funções, placas e sinalizações); compara meios de transporte/comunicação e discute riscos/uso responsável.",
+        "História": "Compara sua infância com a de outros tempos usando fontes (objetos, documentos, fotos); narra modos de viver de crianças em diferentes tempos (morar, brincar, estudar, comunicar-se, locomover-se) e identifica mudanças/permanências; explica formas de organização de grupos (família, escola, povos originários, quilombolas) a partir de fontes; narra direitos e responsabilidades com base em documentos (DUDC, ECA); narra formas de trabalho e impactos ambientais na comunidade.",
+        "Matemática": "Lê/registra/compara números até 100; conta por agrupamentos e reconhece valor posicional; resolve adição e subtração até 100; classifica/ordena por atributos; lê/registra datas e meses; mede/estima/compara comprimentos (unidades não convencionais e convencionais); localiza/desloca-se com múltiplos referenciais; lê/constrói quadros e gráficos de barras/colunas; ampliações: até 1000, operações até centenas, ideias iniciais de multiplicação e divisão, leitura de horas (hora/meia), massa e sistema monetário.",
+        "Língua Portuguesa": "Participa de interações orais (ouvir, contar, recontar); lê pequenos textos; explora rimas e aliterações; escreve pequenos textos; expressa ideias com sequência lógica; localiza informações explícitas; reconhece variações som–letra; mantém unidade temática; identifica finalidade/assunto; usa espaçamento entre palavras."
+        },
+        "3": {
+        "Ciências": "Identifica fontes de som naturais/artificiais e hábitos de saúde auditiva; relaciona fontes de luz com objetos transparentes/opacos e hábitos para saúde dos olhos; diferencia fontes de calor, materiais condutores/isolantes e tecnologias (isolamento/termômetros); descreve ciclos de vida e modos de vida dos animais (inclusive humanos); compara animais por características externas; reconhece animais que podem causar acidentes/doenças; identifica características da Terra com representações (mapas, globos, fotos) e registra visibilidade de astros; explica formação/composição do solo; compreende atmosfera e vento.",
+        "Geografia": "Elabora/representa trajetos com desenhos; utiliza planta simples/mapa para localizar elementos; lê legenda; reconhece paisagens de Curitiba e entorno; compreende Curitiba como espaço urbano e suas atividades produtivas; reconhece diversidade humana e contribuições étnicas; reconhece modos de vida de povos e comunidades tradicionais.",
+        "História": "Constrói narrativas sobre patrimônio histórico, cultural e ambiental de Curitiba; compara espaços públicos e privados do município; narra ocupação e povoamento de Curitiba (bandeirantes, negros, imigrantes) a partir de fontes; narra diversidade cultural (povos originários, portugueses, africanos, imigrantes); interpreta direitos e responsabilidades na cidade (leis ambientais, trânsito, poderes); interpreta símbolos municipais (hino, bandeira, brasão).",
+        "Matemática": "Lê/escreve números até 1000; compreende SND até 3ª ordem; estima/aproxima/cálculo mental; constrói significados de multiplicações (2 a 6); resolve adição/subtração; organiza sequências por adições/subtrações sucessivas e descreve a regra; mede comprimentos (m, cm, mm); lê/constrói gráficos e interpreta tabelas simples/dupla entrada; ampliações: ordinais até 30; multiplicações de 2 a 10; problemas com dobro/triplo/metade/terça; horas (hora, meia e 15 min); sistema monetário.",
+        "Língua Portuguesa": "Formula/responde questões orais; ativa conhecimentos prévios; amplia vocabulário em escrita; acentua palavras; adequa a fala a situações; infere informações; pontua textos; produz textos coerentes; defende ponto de vista oralmente; estabelece relações entre partes do texto; segmenta corretamente palavras; usa concordância nominal."
+        },
+        "4": {
+        "Ciências": "Identifica misturas do cotidiano; relata transformações de materiais (aquecimento, resfriamento, luz, umidade); reconhece a célula como unidade básica; diferencia uni/pluricelulares; constrói cadeias alimentares simples e reconhece o papel do Sol; reconhece microrganismos, doenças associadas e relações com ambiente/sociedade/tecnologia; reconhece direções cardeais via Sol/sombra (gnômon); associa ciclos da Lua/Terra a períodos e calendários; identifica componentes do Sistema Solar e características dos planetas.",
+        "Geografia": "Usa direções cardeais para orientação (mapas, croquis, maquetes, espaço geográfico); compreende mapa como representação reduzida (escala); compara mapas e outras representações (globo, maquetes, plantas, croquis); descreve processos migratórios e contribuições; conhece paisagens do Paraná (relevo, vegetação, rios, clima e relações); identifica intervenções humanas (urbanização, desmatamento, poluição); compreende atividades produtivas nos espaços urbano/rural (setores econômicos); reconhece interdependência campo–cidade (fluxos).",
+        "História": "Narra primeiras formações sociais a partir de fontes; narra mudanças/permanências (nomadismo/sedentarismo, agricultura/pastoreio, escrita, circulação); orienta-se temporalmente sobre ocupação/povoamento do Brasil/Paraná (povos originários, presença africana, imigrantes, migrantes); explica diversidade cultural como resultado de ações de diferentes povos; interpreta direitos e responsabilidades no Paraná (leis, terras indígenas/quilombolas, patrimônio); constrói narrativa sobre símbolos estaduais (hino, bandeira, brasão).",
+        "Matemática": "Lê/escreve números até 10.000; SND até 4ª ordem; estima, arredonda e calcula mentalmente; multiplicações de 2 a 10; resolve adição/subtração e multiplicação/divisão; identifica regularidades; mede comprimentos, massa e capacidade (unidades convencionais); localiza/desloca objetos com linguagem geométrica; interpreta tabelas/dupla entrada e gráficos; ampliações: frações, temperaturas, medidas de tempo, sólidos e planificações, coleta e representação de dados.",
+        "Língua Portuguesa": "Reconhece características da conversação espontânea e formas de tratamento; identifica ideia central; analisa/usa concordância verbal; usa expressividade na fala; infere significados por contexto; reconhece e usa elementos coesivos; expõe oralmente com roteiro; estabelece relações de causa e consequência; respeita convenções ortográficas regulares; organiza a produção segundo o gênero."
+        },
+        "5": {
+        "Ciências": "Reconhece propriedades físicas de materiais (densidade, condutividade térmica/eléctrica, magnetismo, solubilidade, dureza/elasticidade etc.); explica ciclo da água e implicações (agricultura, clima, energia, água potável, ecossistemas); identifica usos da água/materiais e propõe consumo consciente, descarte/reutilização/reciclagem; reconhece corpo humano como sistema integrado (células, tecidos, órgãos, sistemas) e sistemas ligados à nutrição; entende grupos alimentares e influência da mídia; identifica constelações; reconhece rotação/translação e estações; reconhece fases da Lua e suas influências; conhece tecnologias para estudo do Universo (luneta, telescópio) e agências (AEB, NASA).",
+        "Geografia": "Lê/interpreta mapas (símbolos, orientação, legenda, título, subtítulo, fonte, escala); analisa dinâmicas populacionais no Paraná (migrações/infraestrutura); identifica diferenças étnico-raciais/culturais e desigualdades; conhece paisagens do Brasil (relevo, vegetação, rios, clima e ação humana); identifica e propõe soluções a problemas socioambientais locais; analisa transformações urbanas por imagens aéreas/satélite; identifica funções das cidades e mudanças sociais/econômicas/ambientais; compara mudanças do trabalho e desenvolvimento tecnológico; identifica tipos de energia no cotidiano e produção.",
+        "História": "Argumenta sobre povos nômades/sedentários e migrações; explica modos de vida dos povos originários (Brasil/Paraná); narra significado de cidadania em diferentes contextos; relaciona cidadania a respeito à diversidade e direitos humanos; explica primeiros contatos (originários, europeus, africanos); narra formas de exploração econômica e impactos (pau-brasil, cana, mineração); interpreta movimentos de resistência (Inconfidência, Conjuração Baiana, Emancipação do PR, Federalista, Contestado); narra movimentos sociais/políticos/culturais do Paraná; argumenta sobre patrimônio material/imaterial; narra tradições orais e símbolos nacionais.",
+        "Matemática": "Lê/escreve números de diferentes magnitudes; compõe/decompõe no SND; estima/arredonda/cálculo mental; reconhece pares/ímpares; resolve adição/subtração e multiplicação/divisão; regularidades por ×/÷ por 1,10,100,1000; mede comprimentos, massa, capacidade (com transformações); localiza/desloca com vários referenciais (inclui coordenadas); interpreta tabelas e gráficos (linhas, pictóricos, barras/colunas); frações/decimais: representa, compara, ordena; opera com naturais e racionais (adição/subtração/multiplicação/divisão); propriedades de igualdade; intervalos de tempo; sistema monetário; figuras planas; média aritmética; frações equivalentes; percentuais usuais; perímetro/área de retângulos; ampliação/redução com proporcionalidade; probabilidade simples.",
+        "Língua Portuguesa": "Usa expressividade na fala; distingue fato de opinião; relaciona título e texto; produz textos adequados à situação comunicativa; reconhece e respeita modos de falar; identifica ironia/humor; argumenta em produções escritas; usa hifenização na translineação; defende ponto de vista; lê com proficiência; respeita convenções ortográficas irregulares; escreve adequando-se ao gênero e ao contexto."
+        }
+    },
+    "3": {
+        "1": {
+        "Ciências": "Compara características de materiais do cotidiano (cor, brilho, odor, sabor, textura, transparência, temperatura e forma); identifica atitudes de preservação ambiental e descarte correto; localiza e nomeia partes do corpo (órgãos dos sentidos, cabeça, pescoço, tronco, membros) e explica funções; reconhece hábitos saudáveis, autocuidado e respeito às diferenças; identifica objetos/tecnologias que ampliam sentidos; identifica escalas de tempo (dia, semana, mês, ano); caracteriza céu e astros visíveis; reconhece o Sol como fonte natural de luz e calor.",
+        "Geografia": "Localiza pessoas/objetos nos espaços de vivência usando referenciais (dentro/fora, ao lado, frente/trás, perto/longe, cima/baixo, antes/depois, entre, junto/separado); reconhece e elabora símbolos de objetos do espaço vivido; descreve a paisagem e a ação humana nas transformações; associa vestuário/hábitos à variação de temperatura/umidade; identifica grupos sociais (família, escola, comunidade) e atividades; reconhece diversidade humana e situações de preconceito.",
+        "História": "Narra a própria identidade e história de vida; descreve cotidiano de crianças hoje (família, escola, comunidade); narra manifestações culturais dos grupos de convívio; compara modos de viver de crianças em diferentes tempos e espaços a partir de fontes; narra regras, direitos e responsabilidades na família, escola e comunidade.",
+        "Matemática": "Lê/registra números até 10 e relaciona às quantidades; conta elementos de coleções, compara, ordena e classifica; resolve adição/subtração com resultados até 10; orienta-se/desloca-se no espaço por um ponto de referência; classifica/ordena por atributos; identifica períodos do dia, dias da semana, meses, datas; compara/ordena comprimentos; investiga situações de interesse e registra. Ampliações ao longo do ano: até 30, ideias iniciais de multiplicação/divisão, leitura de quadros/gráficos simples.",
+        "Língua Portuguesa": "Respeita turnos de fala; participa de leituras e escritas coletivas; reconhece o alfabeto; expressa ideias com clareza; lê palavras e frases; estabelece relação som–letra; escreve palavras e frases; recita textos da tradição oral com entonação adequada; reconhece a mesma palavra em diferentes tipos de letra."
+        },
+        "2": {
+        "Ciências": "Identifica materiais (metais, madeira, vidro, plástico) e seus usos considerando propriedades (flexibilidade, dureza, transparência; permeável/impermeável); compreende redução de desperdício e tecnologias que minimizam impactos; diferencia seres vivos (animais, plantas, fungos, bactérias) de componentes não vivos (ar, água, solo, rochas, luz, calor do Sol); identifica partes das plantas e funções; descreve posições do Sol e sombras; identifica cuidados com exposição solar e tecnologias de proteção; compara efeito da radiação solar em diferentes superfícies (água, areia, solo; claras/escuras/metálicas).",
+        "Geografia": "Localiza elementos na sala com referenciais (inclui direita/esquerda); reconhece objetos e lugares da escola/entorno em mapas, imagens aéreas e fotos; desenha espaços de vivência com proporcionalidade e localização correta; compara costumes e tradições da comunidade e respeita diferenças; descreve paisagens (construções, funções, placas e sinalizações); compara meios de transporte/comunicação e discute riscos/uso responsável.",
+        "História": "Compara sua infância com a de outros tempos usando fontes (objetos, documentos, fotos); narra modos de viver de crianças em diferentes tempos (morar, brincar, estudar, comunicar-se, locomover-se) e identifica mudanças/permanências; explica formas de organização de grupos (família, escola, povos originários, quilombolas) a partir de fontes; narra direitos e responsabilidades com base em documentos (DUDC, ECA); narra formas de trabalho e impactos ambientais na comunidade.",
+        "Matemática": "Lê/registra/compara números até 100; conta por agrupamentos e reconhece valor posicional; resolve adição e subtração até 100; classifica/ordena por atributos; lê/registra datas e meses; mede/estima/compara comprimentos (unidades não convencionais e convencionais); localiza/desloca-se com múltiplos referenciais; lê/constrói quadros e gráficos de barras/colunas; ampliações: até 1000, operações até centenas, ideias iniciais de multiplicação e divisão, leitura de horas (hora/meia), massa e sistema monetário.",
+        "Língua Portuguesa": "Participa de interações orais (ouvir, contar, recontar); lê pequenos textos; explora rimas e aliterações; escreve pequenos textos; expressa ideias com sequência lógica; localiza informações explícitas; reconhece variações som–letra; mantém unidade temática; identifica finalidade/assunto; usa espaçamento entre palavras."
+        },
+        "3": {
+        "Ciências": "Identifica fontes de som naturais/artificiais e hábitos de saúde auditiva; relaciona fontes de luz com objetos transparentes/opacos e hábitos para saúde dos olhos; diferencia fontes de calor, materiais condutores/isolantes e tecnologias (isolamento/termômetros); descreve ciclos de vida e modos de vida dos animais (inclusive humanos); compara animais por características externas; reconhece animais que podem causar acidentes/doenças; identifica características da Terra com representações (mapas, globos, fotos) e registra visibilidade de astros; explica formação/composição do solo; compreende atmosfera e vento.",
+        "Geografia": "Elabora/representa trajetos com desenhos; utiliza planta simples/mapa para localizar elementos; lê legenda; reconhece paisagens de Curitiba e entorno; compreende Curitiba como espaço urbano e suas atividades produtivas; reconhece diversidade humana e contribuições étnicas; reconhece modos de vida de povos e comunidades tradicionais.",
+        "História": "Constrói narrativas sobre patrimônio histórico, cultural e ambiental de Curitiba; compara espaços públicos e privados do município; narra ocupação e povoamento de Curitiba (bandeirantes, negros, imigrantes) a partir de fontes; narra diversidade cultural (povos originários, portugueses, africanos, imigrantes); interpreta direitos e responsabilidades na cidade (leis ambientais, trânsito, poderes); interpreta símbolos municipais (hino, bandeira, brasão).",
+        "Matemática": "Lê/escreve números até 1000; compreende SND até 3ª ordem; estima/aproxima/cálculo mental; constrói significados de multiplicações (2 a 6); resolve adição/subtração; organiza sequências por adições/subtrações sucessivas e descreve a regra; mede comprimentos (m, cm, mm); lê/constrói gráficos e interpreta tabelas simples/dupla entrada; ampliações: ordinais até 30; multiplicações de 2 a 10; problemas com dobro/triplo/metade/terça; horas (hora, meia e 15 min); sistema monetário.",
+        "Língua Portuguesa": "Formula/responde questões orais; ativa conhecimentos prévios; amplia vocabulário em escrita; acentua palavras; adequa a fala a situações; infere informações; pontua textos; produz textos coerentes; defende ponto de vista oralmente; estabelece relações entre partes do texto; segmenta corretamente palavras; usa concordância nominal."
+        },
+        "4": {
+        "Ciências": "Identifica misturas do cotidiano; relata transformações de materiais (aquecimento, resfriamento, luz, umidade); reconhece a célula como unidade básica; diferencia uni/pluricelulares; constrói cadeias alimentares simples e reconhece o papel do Sol; reconhece microrganismos, doenças associadas e relações com ambiente/sociedade/tecnologia; reconhece direções cardeais via Sol/sombra (gnômon); associa ciclos da Lua/Terra a períodos e calendários; identifica componentes do Sistema Solar e características dos planetas.",
+        "Geografia": "Usa direções cardeais para orientação (mapas, croquis, maquetes, espaço geográfico); compreende mapa como representação reduzida (escala); compara mapas e outras representações (globo, maquetes, plantas, croquis); descreve processos migratórios e contribuições; conhece paisagens do Paraná (relevo, vegetação, rios, clima e relações); identifica intervenções humanas (urbanização, desmatamento, poluição); compreende atividades produtivas nos espaços urbano/rural (setores econômicos); reconhece interdependência campo–cidade (fluxos).",
+        "História": "Narra primeiras formações sociais a partir de fontes; narra mudanças/permanências (nomadismo/sedentarismo, agricultura/pastoreio, escrita, circulação); orienta-se temporalmente sobre ocupação/povoamento do Brasil/Paraná (povos originários, presença africana, imigrantes, migrantes); explica diversidade cultural como resultado de ações de diferentes povos; interpreta direitos e responsabilidades no Paraná (leis, terras indígenas/quilombolas, patrimônio); constrói narrativa sobre símbolos estaduais (hino, bandeira, brasão).",
+        "Matemática": "Lê/escreve números até 10.000; SND até 4ª ordem; estima, arredonda e calcula mentalmente; multiplicações de 2 a 10; resolve adição/subtração e multiplicação/divisão; identifica regularidades; mede comprimentos, massa e capacidade (unidades convencionais); localiza/desloca objetos com linguagem geométrica; interpreta tabelas/dupla entrada e gráficos; ampliações: frações, temperaturas, medidas de tempo, sólidos e planificações, coleta e representação de dados.",
+        "Língua Portuguesa": "Reconhece características da conversação espontânea e formas de tratamento; identifica ideia central; analisa/usa concordância verbal; usa expressividade na fala; infere significados por contexto; reconhece e usa elementos coesivos; expõe oralmente com roteiro; estabelece relações de causa e consequência; respeita convenções ortográficas regulares; organiza a produção segundo o gênero."
+        },
+        "5": {
+        "Ciências": "Reconhece propriedades físicas de materiais (densidade, condutividade térmica/eléctrica, magnetismo, solubilidade, dureza/elasticidade etc.); explica ciclo da água e implicações (agricultura, clima, energia, água potável, ecossistemas); identifica usos da água/materiais e propõe consumo consciente, descarte/reutilização/reciclagem; reconhece corpo humano como sistema integrado (células, tecidos, órgãos, sistemas) e sistemas ligados à nutrição; entende grupos alimentares e influência da mídia; identifica constelações; reconhece rotação/translação e estações; reconhece fases da Lua e suas influências; conhece tecnologias para estudo do Universo (luneta, telescópio) e agências (AEB, NASA).",
+        "Geografia": "Lê/interpreta mapas (símbolos, orientação, legenda, título, subtítulo, fonte, escala); analisa dinâmicas populacionais no Paraná (migrações/infraestrutura); identifica diferenças étnico-raciais/culturais e desigualdades; conhece paisagens do Brasil (relevo, vegetação, rios, clima e ação humana); identifica e propõe soluções a problemas socioambientais locais; analisa transformações urbanas por imagens aéreas/satélite; identifica funções das cidades e mudanças sociais/econômicas/ambientais; compara mudanças do trabalho e desenvolvimento tecnológico; identifica tipos de energia no cotidiano e produção.",
+        "História": "Argumenta sobre povos nômades/sedentários e migrações; explica modos de vida dos povos originários (Brasil/Paraná); narra significado de cidadania em diferentes contextos; relaciona cidadania a respeito à diversidade e direitos humanos; explica primeiros contatos (originários, europeus, africanos); narra formas de exploração econômica e impactos (pau-brasil, cana, mineração); interpreta movimentos de resistência (Inconfidência, Conjuração Baiana, Emancipação do PR, Federalista, Contestado); narra movimentos sociais/políticos/culturais do Paraná; argumenta sobre patrimônio material/imaterial; narra tradições orais e símbolos nacionais.",
+        "Matemática": "Lê/escreve números de diferentes magnitudes; compõe/decompõe no SND; estima/arredonda/cálculo mental; reconhece pares/ímpares; resolve adição/subtração e multiplicação/divisão; regularidades por ×/÷ por 1,10,100,1000; mede comprimentos, massa, capacidade (com transformações); localiza/desloca com vários referenciais (inclui coordenadas); interpreta tabelas e gráficos (linhas, pictóricos, barras/colunas); frações/decimais: representa, compara, ordena; opera com naturais e racionais (adição/subtração/multiplicação/divisão); propriedades de igualdade; intervalos de tempo; sistema monetário; figuras planas; média aritmética; frações equivalentes; percentuais usuais; perímetro/área de retângulos; ampliação/redução com proporcionalidade; probabilidade simples.",
+        "Língua Portuguesa": "Usa expressividade na fala; distingue fato de opinião; relaciona título e texto; produz textos adequados à situação comunicativa; reconhece e respeita modos de falar; identifica ironia/humor; argumenta em produções escritas; usa hifenização na translineação; defende ponto de vista; lê com proficiência; respeita convenções ortográficas irregulares; escreve adequando-se ao gênero e ao contexto."
+        }
+    }
+    };
+    </script>
+    <script>
+    // Helpers do overlay
+    function showTransition(title="Carregando…", sub="Aguarde um instante.") {
+    const o = document.getElementById('transition-overlay');
+    document.getElementById('transition-title').textContent = title;
+    document.getElementById('transition-sub').textContent = sub;
+    setProgress(0);
+    o.style.display = 'flex';
+    }
+    function hideTransition() {
+    const o = document.getElementById('transition-overlay');
+    o.style.display = 'none';
+    }
+    function setProgress(pct) {
+    const p = Math.max(0, Math.min(100, Math.round(pct)));
+    const fill = document.getElementById('progress-fill');
+    const txt = document.getElementById('progress-text');
+    if (fill) fill.style.width = p + '%';
+    if (txt)  txt.textContent = p + '%';
+    }
+
+    // utilitário simples para concorrência limitada
+    async function mapWithConcurrency(items, limit, worker) {
+    const ret = new Array(items.length);
+    let i = 0;
+    const runners = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+        while (i < items.length) {
+        const idx = i++;
+        ret[idx] = await worker(items[idx], idx);
+        }
+    });
+    await Promise.all(runners);
+    return ret;
+    }
+
+    function normalizarAno(v) {
+    // pega só dígitos: "1º Ano" -> "1"
+    const n = String(v ?? '').match(/\d+/)?.[0];
+    return n || String(v ?? '').trim();
+    }
+
+    function normalizarMateria(v) {
+    const s = String(v ?? '').toLowerCase()
+        .normalize('NFD').replace(/\p{Diacritic}/gu, '');
+    if (/^portu/.test(s))  return 'Língua Portuguesa';
+    if (/^matem/.test(s)) return 'Matemática';
+    if (/^cien/.test(s))  return 'Ciências';
+    if (/^hist/.test(s))  return 'História';
+    if (/^geog/.test(s))  return 'Geografia';
+    // volta como veio se não bater nenhum
+    return String(v ?? '').trim();
+    }
+    function obterTextoPadrao(anoBruto, materiaBruta, triBruto) {
+    const ano     = normalizarAno(anoBruto);      
+    const materia = normalizarMateria(materiaBruta); 
+    const tri     = String(triBruto || '').trim();
+
+    const porTri  = TEXTOS_PADRAO_MATERIA[tri];
+    const global  = TEXTOS_PADRAO_MATERIA.default || {};
+
+    // 1) tri -> ano -> matéria
+    if (porTri && porTri[ano] && porTri[ano][materia]) return porTri[ano][materia];
+    // 2) tri -> ano -> default
+    if (porTri && porTri[ano] && porTri[ano].default)  return porTri[ano].default;
+    // 3) tri -> default -> matéria
+    if (porTri && porTri.default && porTri.default[materia]) return porTri.default[materia];
+    // 4) tri -> default -> default
+    if (porTri && porTri.default && porTri.default.default)  return porTri.default.default;
+    // 5) global por matéria
+    if (global[materia]) return global[materia];
+    // 6) global default
+    return global.default || '';
+    }
+    </script>
+
+    <script>
+    function exibirTextoPadraoMateria() {
+    const selMat  = document.getElementById('materia');
+    const wrapper = document.getElementById('texto-padrao-wrapper');
+    const box     = document.getElementById('texto-padrao');
+
+    const materiaSel = (selMat?.value || '').trim();
+    const anoSel     = (dadosAnteriores?.ano || document.getElementById('ano')?.value || '').trim();
+    const tri        = dadosAnteriores?.trimestre || obterTrimestreAtual(); // <<< trimestre aqui
+
+    if (!materiaSel) {
+        box.textContent = '';
+        toggleHidden(wrapper, false);
+        return;
+    }
+
+    const texto = obterTextoPadrao(anoSel, materiaSel, tri);
+    box.textContent = texto;
+    toggleHidden(wrapper, !!texto);
+    }
+    </script>
+    <script>
+    // Preenche a lista de professores na tela de exportação
+    function preencherProfessoresExport() {
+    try {
+        const nomes = [...new Set((dadosCarregados?.professores || [])
+        .map(p => p.Professor || p.nome)
+        .filter(Boolean))];
+        populateSelect('f_professor', nomes);
+        // adiciona manualmente a opção (todos)
+        const sel = document.getElementById('f_professor');
+        if (sel && sel.firstChild?.value !== '') {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '(todos)';
+        sel.insertBefore(opt, sel.firstChild);
+        }
+    } catch(e) {
+        console.warn('Não foi possível preencher professores (export):', e);
+    }
+    }
+
+    // Monta a URL de exportação com querystring a partir dos filtros
+    function exportarExcel() {
+    const base = '/export/respostas.xlsx';
+    const q = new URLSearchParams();
+
+    const professor = document.getElementById('f_professor')?.value?.trim();
+    const trimestre = document.getElementById('f_trimestre')?.value?.trim();
+    const materia   = document.getElementById('f_materia')?.value?.trim();
+    const turno     = document.getElementById('f_turno')?.value?.trim();
+    const turma     = document.getElementById('f_turma')?.value?.trim();
+
+    if (professor) q.set('professor', professor);
+    if (trimestre) q.set('trimestre', trimestre);
+    if (materia)   q.set('materia',   materia);
+    if (turno)     q.set('turno',     turno);
+    if (turma)     q.set('turma',     turma);
+
+    // Navega para a rota de exportação -> dispara download do .xlsx
+    const url = q.toString() ? `${base}?${q.toString()}` : base;
+    window.location.href = url;
+    }
+
+    // Garante que ao entrar na tela os professores estejam prontos
+    document.addEventListener('DOMContentLoaded', () => {
+    // quando o sistema terminar de carregar dados, chamamos:
+    const _orig = inicializarSistema;
+    if (typeof _orig === 'function') {
+        // monkey patch leve: depois de inicializar, preencher os profs
+        window.inicializarSistema = async function() {
+        await _orig();
+        preencherProfessoresExport();
+        }
+    } else {
+        // fallback
+        preencherProfessoresExport();
+    }
+    });
+    </script>
+
+    <script>
+ 
+    // chama UMA vez quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', () => {
+        setupCardsDelegation();
+    });
+
+    function setupCardsDelegation() {
+        const container = document.getElementById('cards-resumo');
+        if (!container) return;              // se não existir ainda, não registra
+        container.addEventListener('click', onCardClick); 
+    }
+
+    async function onCardClick(e) {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+
+        const card = e.target.closest('.card-resumo');
+        if (!card) return;
+
+        const professor = (document.getElementById('professor-resumo').value || '').trim();
+        const id = (card.dataset.id || '').trim(); // UUID string
+        
+
+        const view = card.querySelector('.card-desc.view');
+        const edit = card.querySelector('.card-desc.edit');
+        const bEdit = card.querySelector('.btn-edit');
+        const bSave = card.querySelector('.btn-save');
+        const bCancel = card.querySelector('.btn-cancel');
+
+        if (btn.classList.contains('btn-edit')) {
+            edit.value = (view.textContent.trim() === 'Sem descrição') ? '' : view.textContent.trim();
+            view.style.display = 'none';
+            edit.style.display = 'block';
+            bEdit.style.display = 'none';
+            bSave.style.display = 'inline-block';
+            bCancel.style.display = 'inline-block';
+            edit.focus();
+
+            // (Opcional) atalhos de teclado
+            const onKey = (ev) => {
+                if (ev.key === 'Escape') bCancel.click();
+                if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) bSave.click();
+            };
+            edit.addEventListener('keydown', onKey, { once: true });
+
+            return;
+        }
+
+        if (btn.classList.contains('btn-cancel')) {
+            edit.style.display = 'none';
+            view.style.display = 'block';
+            bEdit.style.display = 'inline-block';
+            bSave.style.display = 'none';
+            bCancel.style.display = 'none';
+            return;
+        }
+
+        if (btn.classList.contains('btn-save')) {
+            const conteudo = (edit.value || '').trim();
+            if (!professor) { showStatus('resumo-status', 'Informe o professor.', 'error'); return; }
+            const id = (card.dataset.id || '').trim();
+
+            try {
+            bSave.disabled = true; bCancel.disabled = true;
+
+            // AbortController para timeout (por ex., 10s)
+            const controller = new AbortController();
+            const t = setTimeout(() => controller.abort(), 10000);
+
+            const resp = await fetch('/salvar_edicao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // >>> Envie "id" ao invés de "rowIndex"
+                body: JSON.stringify({ professor, id, conteudo }),
+                signal: controller.signal
+            });
+            clearTimeout(t);
+
+            // Tente parsear JSON com fallback
+            let data = {};
+            try { data = await resp.json(); } catch { /* pode ser 204/sem corpo */ }
+
+            if (!resp.ok || data.erro) {
+                const msg = data.erro || resp.statusText || 'Erro desconhecido';
+                showStatus('resumo-status', `Erro ao salvar: ${msg}`, 'error');
+            } else {
+                // sucesso
+                view.textContent = conteudo || 'Sem descrição';
+                edit.style.display = 'none';
+                view.style.display = 'block';
+                bEdit.style.display = 'inline-block';
+                bSave.style.display = 'none';
+                bCancel.style.display = 'none';
+                showStatus('resumo-status', data.mensagem || 'Descrição atualizada!', 'info');
+            }
+            } catch (err) {
+            console.error(err);
+            const aborted = err?.name === 'AbortError';
+            showStatus('resumo-status', aborted ? 'Tempo esgotado ao salvar.' : 'Erro de conexão ao salvar.', 'error');
+            } finally {
+            bSave.disabled = false; bCancel.disabled = false;
+            }
+        }
+        }
+
+        // ===============================
+        // VARIÁVEIS GLOBAIS
+        // ===============================
+        let dadosCarregados = {
+            professores: [],
+            alunos: [],
+            respostas: []
+        };
+        let dadosAnteriores = {};
+        let editandoResumo = false;
+        let sistemaInicializado = false;
+        let fichasCarregadas = [];
+        let carregandoDados = false;
+
+        // ===============================
+        // FUNÇÕES UTILITÁRIAS
+        // ===============================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').innerHTML = `
+                <strong>Erro:</strong> ${message}
+                <br><br>
+                <strong>Verificações:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>As variáveis SUPABASE_URL e SUPABASE_KEY estão configuradas?</li>
+                    <li>As tabelas 'profs', 'alunos' e 'respostas' existem no Supabase?</li>
+                    <li>As colunas do banco estão nomeadas corretamente?</li>
+                    <li>O deploy do Vercel está respondendo normalmente?</li>
+                </ul>
+            `;
+            showScreen('error-screen');
+        }
+
+        function populateSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Selecione...</option>';
+            options.forEach(option => {
+                if (option) {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        // Funções de feedback visual
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            element.className = `alert alert-${type}`;
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function hideStatus(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.display = 'none';
+            }
+        }
+
+        function showLoading(elementId, show = true) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.display = show ? 'block' : 'none';
+            }
+        }
+        function toggleHidden(el, show) {
+        if (!el) return;
+        el.classList.toggle('hidden-field', !show);
+        el.setAttribute('aria-hidden', String(!show));
+        }
+
+        // ===============================
+        // INICIALIZAÇÃO 
+        // ===============================
+        async function inicializarSistema() {
+            if (carregandoDados) {
+                console.log('Carregamento já em andamento, ignorando...');
+                return;
+            }
+
+            carregandoDados = true;
+            showScreen('loading-screen');
+            
+            const fill = document.getElementById('init-progress-fill');
+            const text = document.getElementById('init-progress-text');
+            let progress = 0;
+            if (fill) fill.style.width = '0%';
+            if (text) text.textContent = '0%';
+            
+            // Simula progressão até 90% enquanto a requisição não volta
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += (90 - progress) * 0.1;
+                    if (fill) fill.style.width = `${progress}%`;
+                    if (text) text.textContent = `${Math.floor(progress)}%`;
+                }
+            }, 300);
+            
+            try {
+                console.log('Iniciando carregamento de dados...');
+                
+                const response = await fetch('/dados');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.erro) {
+                    throw new Error(data.erro);
+                }
+                
+                dadosCarregados = data;
+                
+                console.log('Dados carregados:', dadosCarregados);
+                
+                if (!dadosCarregados.professores || dadosCarregados.professores.length === 0) {
+                    throw new Error('Nenhum professor encontrado. Verifique a aba "profs" no arquivo Excel.');
+                }
+                
+                if (!dadosCarregados.alunos || dadosCarregados.alunos.length === 0) {
+                    throw new Error('Nenhum aluno encontrado. Verifique a aba "alunos" no arquivo Excel.');
+                }
+                
+                const nomesUnicos = [...new Set(dadosCarregados.professores.map(p => p.Professor || p.nome))];
+                populateSelect('nome', nomesUnicos);
+                populateSelect('professor-resumo', nomesUnicos);
+                
+                const anos = [...new Set(dadosCarregados.alunos.map(a => a.ano || a.Ano))];
+                populateSelect('ano', anos.filter(Boolean).sort());
+                
+                await carregarTurmasConselho();
+                
+                if (fill) fill.style.width = '100%';
+                if (text) text.textContent = '100%';
+                
+                clearInterval(progressInterval);
+                
+                await new Promise(r => setTimeout(r, 400));
+                
+                sistemaInicializado = true;
+                showScreen('menu-screen');
+                
+                console.log('Sistema inicializado com sucesso!');
+                
+            } catch (error) {
+                if (typeof progressInterval !== 'undefined') clearInterval(progressInterval);
+                console.error('Erro ao carregar dados:', error);
+                showError('Não foi possível carregar os dados: ' + error.message);
+            } finally {
+                carregandoDados = false;
+            }
+        }
+
+        // ===============================
+        // FUNÇÕES DO FORMULÁRIO
+        // ===============================
+        function updateFuncao() {
+            const nome = document.getElementById('nome').value;
+            const professor = dadosCarregados.professores.find(p => p.nome === nome);
+
+            const funcaoSelect = document.getElementById('funcao');
+            funcaoSelect.innerHTML = '<option value="">Selecione...</option>';
+
+            if (professor) {
+                const funcao = professor.funcao || '';
+                const opt = document.createElement('option');
+                opt.value = funcao;
+                opt.textContent = funcao;
+                funcaoSelect.appendChild(opt);
+                funcaoSelect.disabled = false;
+                funcaoSelect.value = funcao;
+            } else {
+                funcaoSelect.disabled = true;
+            }
+        }
+
+        function updateTurmas() {
+            const anoSelecionado = document.getElementById('ano').value;
+            const turmas = [...new Set(
+                dadosCarregados.alunos
+                    .filter(a => (a.ano || a.Ano) === anoSelecionado)
+                    .map(a => a.turma || a.Turma )
+            )];
+            
+            populateSelect('turma', turmas.filter(Boolean).sort());
+        }
+
+        async function nextToForm2() {
+            const btnNext = [...document.querySelectorAll('#form1-screen .btn.btn-primary')].find(b => b.textContent.trim().toLowerCase().startsWith('próximo'));
+            const nome  = document.getElementById('nome').value;
+            const ano   = document.getElementById('ano').value;
+            const turno = document.getElementById('turno').value;
+            const turma = document.getElementById('turma').value;
+            const funcao= document.getElementById('funcao').value;
+
+            if (!nome || !ano || !turno || !turma || !funcao) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+
+            dadosAnteriores = { nome, ano, turno, turma, funcao, dataHora: new Date().toLocaleString('pt-BR') };
+            document.getElementById('info-display').textContent = `${ano} ${turma} - ${turno}`;
+
+            // feedback visual
+            if (btnNext) btnNext.disabled = true;
+            showTransition('Aguarde, carregando dados…','Verificando perfil da turma e alunos disponíveis.');
+
+            try {
+                setProgress(15);
+                await verificarPerfilTurma();     // checa/mostra perfil (quando Regente)
+
+                setProgress(45);
+                await carregarAlunosDisponiveis(); // agora monta a lista de alunos (com checagem de matérias)
+
+                setProgress(100);
+                showScreen('form2-screen');       // vai pra próxima tela
+            } catch (e) {
+                console.error(e);
+                alert('Ocorreu um erro ao preparar a próxima tela.');
+            } finally {
+                hideTransition();
+                if (btnNext) btnNext.disabled = false;
+            }
+            }
+
+
+        async function verificarPerfilTurma() {
+            const funcao = dadosAnteriores.funcao;
+            const perfilSection = document.getElementById('perfil-turma-section');
+            const perfilTextarea = document.getElementById('perfil-turma');
+            const perfilStatus = document.getElementById('perfil-status');
+            
+            if (funcao === 'Regente') {
+                try {
+                    const response = await fetch('/verificar_perfil_turma', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ano: dadosAnteriores.ano,
+                            turma: dadosAnteriores.turma,
+                            turno: dadosAnteriores.turno
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.perfil_existente) {
+                        perfilTextarea.value = data.perfil;
+                        perfilTextarea.readOnly = true;
+                        perfilSection.classList.add('readonly');
+                        perfilStatus.textContent = '(já definido)';
+                        perfilStatus.style.color = '#666';
+                    } else {
+                        perfilTextarea.value = '';
+                        perfilTextarea.readOnly = false;
+                        perfilSection.classList.remove('readonly');
+                        perfilStatus.textContent = '(primeira vez - preencha)';
+                        perfilStatus.style.color = '#e65100';
+                    }
+                    
+                    perfilSection.classList.remove('hidden-field');
+                    
+                } catch (error) {
+                    console.error('Erro ao verificar perfil da turma:', error);
+                    perfilSection.classList.add('hidden-field');
+                }
+            } else {
+                perfilSection.classList.add('hidden-field');
+            }
+        }
+
+        async function carregarAlunosDisponiveis() {
+        // 1) pergunta ao backend a lista bruta
+        const resp = await fetch('/verificar_alunos_disponiveis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dadosAnteriores)
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.erro) throw new Error(data.erro || 'Falha ao verificar alunos.');
+
+        const alunos = Array.isArray(data.alunos) ? data.alunos : [];
+        if (alunos.length === 0) {
+            populateSelect('aluno', []);
+            alert('Todos os alunos desta turma já foram preenchidos para esta função no último mês.');
+            return;
+        }
+
+        // 2) para cada aluno, checa matérias disponíveis em paralelo (limite 6)
+        let concluidos = 0;
+        const total = alunos.length;
+        const aprovados = await mapWithConcurrency(alunos, 6, async (aluno) => {
+            const r = await fetch('/verificar_materias_disponiveis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...dadosAnteriores, aluno })
+            });
+            const j = await r.json();
+            concluidos++;
+            // 30%→95% da barra reservado para esta etapa
+            const pctBase = 45, pctMax = 95;
+            const pct = pctBase + ((concluidos / total) * (pctMax - pctBase));
+            setProgress(pct);
+
+            return (Array.isArray(j.materias) && j.materias.length > 0) ? aluno : null;
+        });
+
+        const alunosConfirmados = aprovados.filter(Boolean);
+        populateSelect('aluno', alunosConfirmados);
+
+        if (alunosConfirmados.length === 0) {
+            alert('Todas as matérias desta turma já foram preenchidas neste mês.');
+        }
+        }
+
+
+        async function carregarMateriasDisponiveis() {
+            const aluno = document.getElementById('aluno').value;
+            if (!aluno) return;
+
+            try {
+                const response = await fetch('/verificar_materias_disponiveis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...dadosAnteriores,
+                        aluno: aluno
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.erro) {
+                    alert(data.erro);
+                    return;
+                }
+                
+                populateSelect('materia', data.materias);
+                // garantir que a troca de matéria exiba o texto
+                const selMat = document.getElementById('materia');
+                if (selMat) {
+                selMat.onchange = exibirTextoPadraoMateria; // liga o evento
+                }
+                exibirTextoPadraoMateria(); // reseta/oculta ao carregar a lista
+                if (data.materias.length === 0) {
+                    alert('Todas as matérias para este aluno já foram preenchidas neste mês.');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar matérias disponíveis:', error);
+                alert('Erro ao carregar matérias disponíveis.');
+            }
+        }
+
+        function showConditionalFields() {
+            const aluno = document.getElementById('aluno').value;
+            const funcao = dadosAnteriores.funcao;
+            
+            if (aluno && funcao === 'Regente') {
+                document.getElementById('conditional-fields').classList.remove('hidden-field');
+            } else {
+                document.getElementById('conditional-fields').classList.add('hidden-field');
+            }
+
+            if (aluno) {
+                carregarMateriasDisponiveis();
+            }
+        }
+
+        async function finalizarPreenchimento() {
+            const aluno = document.getElementById('aluno').value;
+            const materia = document.getElementById('materia').value;
+            const descricao = document.getElementById('descricao').value;
+
+            if (!aluno || !materia || !descricao.trim()) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+
+            const resposta = {
+            ...dadosAnteriores,
+            aluno,
+            materia,
+            descricao
+            };
+
+            if (dadosAnteriores.funcao === 'Regente') {
+                const perfilTurma = document.getElementById('perfil-turma').value;
+                if (perfilTurma && perfilTurma.trim()) {
+                    resposta.perfilTurma = perfilTurma.trim();
+                }
+            }
+
+            if (!document.getElementById('conditional-fields').classList.contains('hidden-field')) {
+                resposta.papi = document.getElementById('papi').value;
+                resposta.inclusao = document.getElementById('inclusao').value;
+            }
+
+            try {
+                const response = await fetch('/salvar_resposta', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(resposta)
+                });
+                
+                const data = await response.json();
+                if (data.erro) {
+                    alert(data.erro);
+                    return;
+                }
+                
+                document.getElementById('descricao').value = '';
+                
+                showScreen('final-screen');
+                
+            } catch (error) {
+                console.error('Erro ao salvar resposta:', error);
+                alert('Erro ao salvar resposta.');
+            }
+        }
+
+        async function continuarPreenchendo() {
+            await carregarAlunosDisponiveis();
+            await verificarPerfilTurma();
+            showScreen('form2-screen');
+        }
+
+        // ===============================
+        // FUNÇÕES DE RESUMO CORRIGIDAS
+        // ===============================
+        // Buscar e montar os cards
+        async function buscarResumo() {
+        const professor = document.getElementById('professor-resumo').value;
+        if (!professor) {
+            alert('Selecione um professor.');
+            return;
+        }
+
+        const btnBuscar = document.getElementById('btn-buscar');
+        const resultadoDiv = document.getElementById('resumo-resultado');
+
+        try {
+            // loading/UX
+            showLoading('resumo-loading', true);
+            hideStatus('resumo-status');
+            btnBuscar.disabled = true;
+            btnBuscar.textContent = 'Carregando...';
+
+            const response = await fetch('/buscar_resumo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ professor })
+            });
+
+            const data = await response.json();
+
+            if (data.erro) {
+            showStatus('resumo-status', `Erro: ${data.erro}`, 'error');
+            resultadoDiv.textContent = 'Erro ao carregar resumo.';
+            return;
+            }
+
+            // Definir o row-index a partir de rowIndexes
+            document.getElementById('row-index').value =
+            (Array.isArray(data.rowIndexes) && data.rowIndexes.length > 0)
+                ? String(data.rowIndexes[0])
+                : '';
+
+            // Monta os CARDS a partir do resumo de texto
+            if (Array.isArray(data.registros) && data.registros.length) {
+            montarCardsResumoFromJson(data.registros);
+            } else {
+            montarCardsResumo(data.resumo); 
+            }
+
+       
+            showStatus('resumo-status', 'Resumo carregado com sucesso!', 'info');
+
+        } catch (error) {
+            console.error('Erro ao buscar resumo:', error);
+            showStatus('resumo-status', 'Erro de conexão ao buscar resumo.', 'error');
+            resultadoDiv.textContent = 'Erro de conexão.';
+   
+        } finally {
+            showLoading('resumo-loading', false);
+            btnBuscar.disabled = false;
+            btnBuscar.textContent = 'Buscar Resumo';
+        }
+        }
+        function montarCardsResumoFromJson(registros) {
+            const container = document.getElementById('cards-resumo');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!Array.isArray(registros) || registros.length === 0) {
+                container.innerHTML = `<div class="card-resumo"><div class="card-desc"><i>Sem registros.</i></div></div>`;
+                return;
+            }
+
+            registros.forEach(({ id, aluno, materia, dataHora, descricao }) => {
+                const card = document.createElement('div');
+                card.className = 'card-resumo';
+                card.dataset.id = id;
+                card.innerHTML = `
+                                <div class="card-head">
+                                    <span class="badge">[ID ${id}]</span>
+                                    <span class="badge">Aluno: ${aluno}</span>
+                                    <span class="badge">Matéria: ${materia}</span>
+                                    <span class="card-meta">${dataHora}</span>
+                                </div>
+                                <div class="card-desc view">${descricao || '<i>Sem descrição</i>'}</div>
+                                <textarea class="card-desc edit" style="display:none;width:100%;margin-top:8px;">${descricao || ''}</textarea>
+                                <div style="margin-top:8px;">
+                                    <button class="btn-sm btn-edit">Editar</button>
+                                    <button class="btn-sm btn-save" style="display:none;">Salvar</button>
+                                    <button class="btn-sm btn-cancel" style="display:none;">Cancelar</button>
+                                </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        // Transformar o texto do back em CARDS
+        function montarCardsResumo(textoBruto){
+        const container = document.getElementById('cards-resumo');
+        if (!container) return;
+
+        // Normaliza: tira NBSP, mantém \n
+        const t = (textoBruto || '')
+            .replace(/\u00A0/g, ' ')
+            .replace(/\r\n/g, '\n')
+            .replace(/[ \t]+/g, ' ')
+            .trim();
+
+        container.innerHTML = '';
+
+        // Regex que acha: Aluno, ID, Matéria, Tri, Data e Descrição
+        const re = /\s*ALUNO:\s*(.*?)\s*(?:Registros:|\s)?\s*\[ID\s*([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\]\s*•\s*([^()]+?)\s*\(\s*(\d+)º\s*Tri\)\s*-\s*([0-9]{2}\/[0-9]{2}\/[0-9]{4}\s+[0-9]{2}:[0-9]{2})\s*([\s\S]*?)(?=\s*📚\s*ALUNO:|=+|$)/gi;
+        const blocos = [];
+        let m;
+        while ((m = re.exec(t)) !== null) {
+            const aluno    = m[1].trim();
+            const id       = m[2].trim();
+            const materia  = m[3].trim();
+            const tri      = m[4].trim();          
+            const dataHora = m[5].trim();
+            let descricao  = (m[6] || '').trim();
+
+            
+            descricao = descricao.replace(/^\s*Registros:\s*$/i, '').trim();
+
+            blocos.push({ id, aluno, materia, dataHora, descricao, tri });
+        }
+
+        if (blocos.length === 0) {
+            // fallback: mostra texto bruto para debug
+            container.innerHTML = `
+            <div class="card-resumo">
+                <div class="card-desc">${t || 'Sem registros.'}</div>
+            </div>`;
+            console.log('Nenhum bloco encontrado. Texto normalizado:', t);
+            return;
+        }
+
+        // Renderiza um card por registro
+        blocos.forEach(({ id, aluno, materia, dataHora, descricao }) => {
+            const card = document.createElement('div');
+            card.className = 'card-resumo';
+            card.dataset.id = id;
+            card.innerHTML = `
+                <div class="card-head">
+                    <span class="badge">[ID ${id}]</span>
+                    <span class="badge">Aluno: ${aluno}</span>
+                    <span class="badge">Matéria: ${materia}</span>
+                    <span class="card-meta">${dataHora}</span>
+                </div>
+                <div class="card-desc view">${descricao || '<i>Sem descrição</i>'}</div>
+                <textarea class="card-desc edit" style="display:none;width:100%;margin-top:8px;">${descricao || ''}</textarea>
+                <div style="margin-top:8px;">
+                    <button class="btn-sm btn-edit">Editar</button>
+                    <button class="btn-sm btn-save" style="display:none;">Salvar</button>
+                    <button class="btn-sm btn-cancel" style="display:none;">Cancelar</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        }
+
+        async function alternarEdicao() {
+        const btnEditar = document.getElementById('btn-editar');
+
+        // Primeiro clique: só entra no modo edição (os blocos já têm textarea)
+        if (!window.editandoResumo) {
+            btnEditar.textContent = 'Salvar edição';
+            btnEditar.className = 'btn btn-primary';
+            window.editandoResumo = true;
+            showStatus('resumo-status', 'Edite a descrição do bloco escolhido e clique em "Salvar edição".', 'warning');
+            return;
+        }
+
+        // Segundo clique: salva o bloco selecionado
+        try {
+            btnEditar.disabled = true;
+            btnEditar.textContent = 'Salvando...';
+            showLoading('resumo-loading', true);
+
+            const professor = (document.getElementById('professor-resumo').value || '').trim();
+            if (!professor) {
+            showStatus('resumo-status', 'Informe o professor antes de salvar.', 'error');
+            return;
+            }
+
+            // ID selecionado (radio ao lado de cada bloco)
+            const escolhido = document.querySelector('input[name="id-edicao"]:checked');
+            if (!escolhido) {
+            showStatus('resumo-status', 'Selecione um ID para salvar.', 'error');
+            return;
+            }
+            const rowIndex = Number(escolhido.value);
+
+            // Pega a descrição do bloco selecionado (textarea dentro do bloco com data-id)
+            const bloco = document.querySelector(`.bloco-resumo[data-id="${rowIndex}"]`);
+            const textarea = bloco?.querySelector('textarea.descricao');
+            const conteudo = (textarea?.value || '').trim();
+
+            if (!conteudo) {
+            showStatus('resumo-status', 'A descrição está vazia.', 'error');
+            return;
+            }
+
+            // Envia no formato esperado { professor, rowIndex, conteudo }
+            const response = await fetch('/salvar_edicao', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ professor, rowIndex, conteudo })
+            });
+
+            function montarBlocosDeResumo(textoBruto) {
+            const container = document.getElementById('resumo-resultado');
+            const idsSpan = document.getElementById('ids-disponiveis');
+            if (!container) return;
+
+            // normaliza alguns espaços especiais
+            const t = (textoBruto || '')
+                .replace(/\u00A0/g, ' ')
+                .replace(/\s+/g, ' ')   
+                .trim();
+
+            container.innerHTML = '';
+            if (idsSpan) idsSpan.innerHTML = '';
+
+            // regex: pega ALUNO, ID, MATÉRIA, TRI, DATA e DESCRIÇÃO
+            // ...dentro da função montarCardsResumo...
+            const re = /\s*ALUNO:\s*(.*?)\s*(?:Registros:|\s)?\s*\[ID\s*([0-9a-fA-F-]{36})\]\s*•\s*([^()]+?)\s*\(\s*(\d+)º\s*Tri\)\s*-\s*([0-9]{2}\/[0-9]{2}\/[0-9]{4}\s+[0-9]{2}:[0-9]{2})\s*([\s\S]*?)(?=\s*📚\s*ALUNO:|=+|$)/g;
+            const blocos = [];
+            let m;
+            while ((m = re.exec(t)) !== null) {
+                const aluno = m[1].trim();
+                const id = m[2].trim();
+                const materia = m[3].trim();
+                const tri = m[4].trim();
+                const data = m[5].trim();
+                const descricao = (m[6] || '').trim();
+                blocos.push({ id, aluno, materia, tri, data, descricao });
+            }
+
+            if (blocos.length === 0) {
+                
+                container.textContent = textoBruto;
+                showStatus('resumo-status', 'Não consegui separar os blocos. Se quiser, posso ajustar o backend para inserir quebras de linha (\\n).', 'warning');
+                return;
+            }
+
+            // render dos cards
+            blocos.forEach(({ id, aluno, materia, tri, data, descricao }, idx) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'bloco-resumo';
+                wrap.dataset.id = String(id);
+                wrap.style.cssText = 'border:1px solid #ddd;border-radius:10px;padding:10px;margin:10px 0';
+
+                const radioId = `escolha-id-${id}`;
+                wrap.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    <input type="radio" name="id-edicao" id="${radioId}" value="${id}" ${idx===0?'checked':''}>
+                    <label for="${radioId}" style="font-weight:600">[ID ${id}]</label>
+                    <span style="padding:2px 8px;border:1px solid #ccc;border-radius:12px">Aluno: ${aluno}</span>
+                    <span style="padding:2px 8px;border:1px solid #ccc;border-radius:12px">Matéria: ${materia}</span>
+                    <span style="opacity:.75">${tri}º Tri • ${data}</span>
+                </div>
+                <div style="margin-top:8px">
+                    <label style="font-size:12px;opacity:.8">Descrição</label>
+                    <textarea class="descricao" rows="3" style="width:100%;box-sizing:border-box">${descricao}</textarea>
+                </div>
+                `;
+                container.appendChild(wrap);
+
+                // chips de IDs 
+                if (idsSpan) {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.textContent = id;
+                chip.style.cssText = 'margin:4px 4px 0 0;padding:2px 8px;border:1px solid #ccc;border-radius:12px;background:#f7f7f7;cursor:pointer';
+                chip.onclick = () => { document.getElementById(radioId).checked = true; };
+                idsSpan.appendChild(chip);
+                }
+            });
+            }
+
+            const data = await response.json();
+            if (!response.ok || data.erro) {
+            showStatus('resumo-status', `Erro ao salvar: ${data.erro || response.statusText}`, 'error');
+            return;
+            }
+
+            // Sucesso → volta para modo visualização
+            window.editandoResumo = false;
+            showStatus('resumo-status', data.mensagem || 'Edição salva com sucesso!', 'info');
+
+        } catch (e) {
+            console.error(e);
+            showStatus('resumo-status', 'Erro de conexão ao salvar edição.', 'error');
+        } finally {
+            showLoading('resumo-loading', false);
+        }
+        }
+
+        // ===============================
+        //  FUNÇÕES DE CONSELHO
+        // ===============================
+        async function carregarTurmasConselho() {
+            try {
+                const response = await fetch('/buscar_turmas_conselho');
+                const data = await response.json();
+                
+                if (data.erro) {
+                    console.error('Erro ao carregar turmas:', data.erro);
+                    showStatus('conselho-status', `Erro: ${data.erro}`, 'error');
+                    return;
+                }
+                
+                populateSelect('turma-conselho', data.turmas);
+                console.log('Turmas carregadas:', data.turmas);
+                
+            } catch (error) {
+                console.error('Erro ao carregar turmas para conselho:', error);
+                showStatus('conselho-status', 'Erro ao carregar lista de turmas.', 'error');
+            }
+        }
+
+        async function carregarFichasTurma() {
+            const turma = document.getElementById('turma-conselho').value;
+            const turno = document.getElementById('turno-conselho').value;
+
+            if (!turma || !turno) {
+                alert('Selecione turma e turno.');
+                return;
+            }
+
+            const btnBuscar = document.getElementById('btn-buscar-turma');
+            const btnExportar = document.getElementById('btn-exportar');
+            const container = document.getElementById('fichas-container');
+
+            try {
+                // Mostrar loading
+                showLoading('conselho-loading', true);
+                hideStatus('conselho-status');
+                btnBuscar.disabled = true;
+                btnBuscar.textContent = 'Carregando...';
+                btnExportar.style.display = 'none';
+                document.getElementById('ficha-turma-completa').style.display = 'none';
+
+                const response = await fetch('/buscar_ficha_turma', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ turma, turno })
+                });
+
+                const data = await response.json();
+                
+                if (data.erro) {
+                    showStatus('conselho-status', `Erro: ${data.erro}`, 'error');
+                    return;
+                }
+
+                fichasCarregadas = data.alunos;
+                
+                // Atualizar cabeçalho da turma
+                document.getElementById('turma-titulo').textContent = `Relatórios da Turma ${turma} - ${turno}`;
+                
+                // Mostrar informações da turma
+                let countText = '';
+                if (data.total_alunos_turma) {
+                    countText = `${data.alunos_com_registros || 0} aluno(s) com registros de ${data.total_alunos_turma} total na turma`;
+                } else {
+                    countText = `${fichasCarregadas.length} aluno(s) encontrado(s)`;
+                }
+                document.getElementById('alunos-count').textContent = countText;
+
+                // Mostrar perfil da turma se existir
+                const perfilDisplay = document.getElementById('perfil-turma-display');
+                if (data.perfil_turma && data.perfil_turma.trim()) {
+                    perfilDisplay.innerHTML = `<strong>📋 Perfil da Turma:</strong> ${data.perfil_turma}`;
+                    perfilDisplay.style.display = 'block';
+                } else {
+                    perfilDisplay.style.display = 'none';
+                }
+
+                // Limpar container
+                container.innerHTML = '';
+
+                if (fichasCarregadas.length === 0) {
+                    if (data.mensagem) {
+                        showStatus('conselho-status', data.mensagem, 'warning');
+                    }
+                    
+                    container.innerHTML = `
+                        <div class="empty-message">
+                            <h3> Nenhum relatório encontrado</h3>
+                            <p>Não foram encontrados relatórios preenchidos para a turma <strong>${turma} - ${turno}</strong>.</p>
+                            <p>Verifique se:</p>
+                            <ul style="text-align: left; margin: 10px 20px;">
+                                <li>Os relatórios já foram preenchidos</li>
+                                <li>A turma e turno estão corretos</li>
+                                <li>O arquivo de respostas não está corrompido</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    // Renderizar fichas dos alunos
+                    fichasCarregadas.forEach(infoAluno => {
+                        const ficha = document.createElement('div');
+                        ficha.classList.add('ficha-container');
+
+                        // Cabeçalho do aluno
+                        ficha.innerHTML = `
+                            <div class="student-header">
+                                <div class="student-photo">
+                                    <div class="photo-placeholder">👤</div>
+                                </div>
+                                <div class="student-info">
+                                    <h2>${infoAluno.nome}</h2>
+                                    <div class="student-details">
+                                        <span class="detail-item"><strong>Turma:</strong> ${infoAluno.turma}</span>
+                                        <span class="detail-item"><strong>Ano:</strong> ${infoAluno.ano}</span>
+                                        <span class="detail-item"><strong>Turno:</strong> ${infoAluno.turno}</span>
+                                        <span class="detail-item"><strong>Registros:</strong> ${infoAluno.registros.length}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="trimestres-container">
+                                ${[1,2,3].map(t => `
+                                    <div class="trimestre">
+                                        <h3 class="trimestre-title">${t}º Trimestre</h3>
+                                        <div id="trimestre-${t}-${infoAluno.nome.replace(/\s+/g, '').replace(/[^\w]/g, '')}" class="trimestre-content">
+                                            <p class="empty-message">Nenhuma informação registrada neste trimestre.</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+
+                        container.appendChild(ficha);
+
+                        // Preencher trimestres com os registros
+                        infoAluno.registros.forEach(registro => {
+                            const nomeId = infoAluno.nome.replace(/\s+/g, '').replace(/[^\w]/g, '');
+                            const trimestreDiv = document.getElementById(`trimestre-${registro.trimestre}-${nomeId}`);
+                            
+                            if (trimestreDiv) {
+                                // Remover mensagem vazia se for o primeiro registro do trimestre
+                                if (trimestreDiv.querySelector('.empty-message')) {
+                                    trimestreDiv.innerHTML = '';
+                                }
+                                
+                                trimestreDiv.innerHTML += `
+                                    <div class="materia-item">
+                                        <div class="materia-nome"> ${registro.materia}</div>
+                                        <div class="materia-descricao">${registro.descricao}</div>
+                                        <div class="professor-info">
+                                            Professor(a): ${registro.professor} (${registro.funcao})
+                                            <br>Data: ${registro.data}
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        });
+                    });
+                    
+                    showStatus('conselho-status', `✅ Fichas carregadas com sucesso! ${fichasCarregadas.length} aluno(s) com registros.`, 'info');
+                }
+
+                // Mostrar a seção completa e o botão de exportar
+                document.getElementById('ficha-turma-completa').style.display = 'block';
+                if (fichasCarregadas.length > 0) {
+                    btnExportar.style.display = 'flex';
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar fichas da turma:', error);
+                showStatus('conselho-status', 'Erro de conexão ao carregar fichas da turma.', 'error');
+            } finally {
+                // Esconder loading
+                showLoading('conselho-loading', false);
+                btnBuscar.disabled = false;
+                btnBuscar.textContent = '🔍 Buscar Alunos';
+            }
+        }
+
+        // ===============================
+        // FUNÇÕES DE EXPORTAÇÃO PDF
+        // ===============================
+        function abrirModalPDF() {
+            if (fichasCarregadas.length === 0) {
+                alert('Não há dados para exportar. Carregue uma turma primeiro.');
+                return;
+            }
+            document.getElementById('modal-email').style.display = 'block';
+        }
+
+        function fecharModalPDF() {
+            document.getElementById('modal-email').style.display = 'none';
+            document.getElementById('email-destinatario').value = '';
+        }
+
+        async function exportarPDF() {
+            const email = document.getElementById('email-destinatario').value;
+            if (!email) {
+                alert('Por favor, digite um email válido.');
+                return;
+            }
+
+            if (fichasCarregadas.length === 0) {
+                alert('Não há dados para exportar.');
+                return;
+            }
+
+            try {
+                const turma = document.getElementById('turma-conselho').value;
+                const turno = document.getElementById('turno-conselho').value;
+
+                const response = await fetch('/exportar_pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        turma: turma,
+                        turno: turno,
+                        dados: fichasCarregadas
+                    })
+                });
+
+                const data = await response.json();
+                if (data.erro) {
+                    alert('Erro ao exportar PDF: ' + data.erro);
+                    return;
+                }
+
+                alert('PDF enviado com sucesso para ' + email + '!');
+                fecharModalPDF();
+
+            } catch (error) {
+                console.error('Erro ao exportar PDF:', error);
+                alert('Erro ao exportar PDF. Verifique sua conexão.');
+            }
+        }
+
+        // ===============================
+        // EVENTOS E INICIALIZAÇÃO
+        // ===============================
+
+        // Fechar modal quando clicar fora dele
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal-email');
+            if (event.target === modal) {
+                fecharModalPDF();
+            }
+        }
+
+        // Inicializar quando a página carregar
+        window.onload = function() {
+            console.log('Página carregada. Iniciando sistema...');
+            inicializarSistema();
+        };
+
+    </script>
+</body>
+</html>
