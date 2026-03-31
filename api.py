@@ -10,57 +10,35 @@ import pandas as pd
 
 from datetime import datetime
 from collections import defaultdict
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, render_template
 from flask_cors import CORS
 from dotenv import load_dotenv, find_dotenv
 
-from flask import send_file
-import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-@app.route("/")
-def home():
-    return send_file(os.path.join(BASE_DIR, "index.html"))
-    
+
 # ===============================
 # CONFIG INICIAL
 # ===============================
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 os.environ.setdefault("SSL_CERT_FILE", certifi.where())
 os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
 
 def get_base_directory():
     return os.path.dirname(os.path.abspath(__file__))
 
-BASE_DIR = get_base_directory()
 
-def _load_envs():
-    candidates = [
-        os.path.join(BASE_DIR, "api.env"),
-        os.path.join(BASE_DIR, ".env"),
-    ]
-
-    for p in candidates:
-        if os.path.exists(p):
-            load_dotenv(p, override=True)
-            print(f"[env] carregado: {p}")
-            return True
-
-    env_path = find_dotenv()
-    if env_path:
-        load_dotenv(env_path, override=True)
-        print(f"[env] carregado (find_dotenv): {env_path}")
-        return True
-
-    print("[env] nenhum arquivo .env encontrado")
-    return False
-
-_load_envs()
+load_dotenv()
 
 SUPABASE_URL = (os.getenv("SUPABASE_URL") or "").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY") or ""
 SUPABASE_SCHEMA = os.getenv("SUPABASE_SCHEMA", "public")
+
+
+if not SUPABASE_URL:
+    raise Exception("SUPABASE_URL não carregou do .env")
+
 
 EMAIL_CONFIG = {
     "servidor": "smtp.gmail.com",
@@ -98,7 +76,11 @@ _session = requests.Session()
 
 app = Flask(__name__)
 CORS(app)
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, static_folder="static")
+@app.route("/")
+def home():
+    return render_template("index.html")
 app.config.update(
     SEND_FILE_MAX_AGE_DEFAULT=0,
     TEMPLATES_AUTO_RELOAD=True,
@@ -154,10 +136,22 @@ def _to_filters(params: dict | None) -> dict:
 
     return q
 
-def api_get_table(table: str, params: dict | None = None, timeout: int = 15):
+def api_get_table(table: str, params: dict | None = None, timeout: int = 10):
     url = f"{_sb_base()}/{table}"
     q = _to_filters(params)
-    r = _session.get(url, headers=_sb_headers(), params=q, timeout=timeout)
+
+    print("URL:", url)
+    print("PARAMS:", q)
+
+    r = _session.get(
+        url,
+        headers=_sb_headers(),
+        params=q,
+        timeout=timeout
+    )
+
+    print("STATUS:", r.status_code)
+
     r.raise_for_status()
     return r.json()
 
@@ -205,9 +199,7 @@ def get_trimestre_atual():
 # ROTAS
 # ===============================
 
-@app.route("/")
-def home():
-    return jsonify({"ok": True, "mensagem": "API Relatta no ar"})
+
 
 @app.route("/status")
 def status():
@@ -231,15 +223,29 @@ def status():
 @app.route("/dados")
 def carregar_dados():
     try:
-        professores = api_get_table("profs", {"order": "professor.asc", "limit": 5000})
-        alunos = api_get_table("alunos", {"order": "aluno.asc", "limit": 5000})
+        app.logger.info("SUPABASE_URL: %s", SUPABASE_URL)
+        app.logger.info("SUPABASE_KEY carregada? %s", bool(SUPABASE_KEY))
+
+        app.logger.info("Buscando professores no Supabase...")
+        professores = api_get_table("profs", {"limit": 5000})
+
+
+
+        app.logger.info("Professores carregados: %s", len(professores))
+
+        app.logger.info("Buscando alunos no Supabase...")
+        alunos = api_get_table("alunos", {"limit": 5000})
+
+        app.logger.info("Alunos carregados: %s", len(alunos))
 
         return jsonify({
             "professores": professores,
             "alunos": alunos,
             "respostas": []
         })
+
     except Exception as e:
+        app.logger.exception("Erro em /dados")
         return jsonify({"erro": str(e)}), 500
 
 @app.route("/verificar_alunos_disponiveis", methods=["POST"])
@@ -450,6 +456,134 @@ def buscar_ficha_turma():
 
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
+
+@app.route("/buscar_resumo", methods=["POST"])
+def buscar_resumo():
+    try:
+        data = request.get_json() or {}
+
+        professor = (data.get("professor") or "").strip()
+        trimestre = (data.get("trimestre") or "").strip()
+        mes = (data.get("mes") or "").strip()
+        aluno_filtro = (data.get("aluno") or "").strip().lower()
+        ano_filtro = (data.get("ano") or "").strip()
+        turma_filtro = (data.get("turma") or "").strip()
+
+        if not professor:
+            return jsonify({"erro": "Professor não informado."}), 400
+
+        rows = api_get_table("respostas", {
+            "professor": professor,
+            "limit": 5000
+        })
+
+        # filtros adicionais
+        filtrados = []
+        for r in rows:
+            if trimestre and str(r.get("trimestre") or "") != trimestre:
+                continue
+
+            if ano_filtro and str(r.get("ano") or "").strip() != ano_filtro:
+                continue
+
+            if turma_filtro and str(r.get("turma") or "").strip() != turma_filtro:
+                continue
+
+            nome_aluno = str(r.get("aluno") or "").strip()
+            if aluno_filtro and aluno_filtro not in nome_aluno.lower():
+                continue
+
+            if mes:
+                datahora = r.get("datahora")
+                try:
+                    dt = pd.to_datetime(str(datahora), errors="coerce")
+                    if pd.isna(dt) or str(dt.month) != mes:
+                        continue
+                except Exception:
+                    continue
+
+            filtrados.append(r)
+
+        if not filtrados:
+            return jsonify({
+                "resumo": "Nenhum registro encontrado com os filtros informados.",
+                "rowIndexes": [],
+                "registros": []
+            })
+
+        grupos = defaultdict(list)
+        for r in filtrados:
+            chave = (
+                r.get("ano") or "",
+                r.get("turma") or "",
+                r.get("turno") or ""
+            )
+            grupos[chave].append(r)
+
+        resumo = []
+        registros = []
+
+        resumo.append("RESUMO DE PREENCHIMENTOS")
+        resumo.append(f"Professor(a): {professor}")
+        resumo.append("=" * 60)
+        resumo.append(f"Total de registros: {len(filtrados)}")
+        resumo.append(f"Data do relatório: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+        resumo.append("")
+
+        def fmt_data(datahora):
+            if not datahora:
+                return "Data não informada"
+            try:
+                return pd.to_datetime(str(datahora), errors="coerce").strftime("%d/%m/%Y %H:%M")
+            except Exception:
+                return str(datahora)
+
+        for (ano, turma, turno), grupo in grupos.items():
+            resumo.append(f"TURMA: {ano} {turma} - {turno}")
+            resumo.append("-" * 40)
+
+            alunos = defaultdict(list)
+            for r in grupo:
+                alunos[r.get("aluno") or "—"].append(r)
+
+            for aluno, regs in alunos.items():
+                resumo.append(f"\nALUNO: {aluno}")
+                resumo.append("Registros:")
+
+                for r in regs:
+                    rid = str(r.get("id") or "")
+                    data_fmt = fmt_data(r.get("datahora"))
+                    materia = r.get("materia") or "Não informada"
+                    tri = r.get("trimestre") or 1
+                    desc = r.get("descricao") or "Sem descrição"
+
+                    resumo.append(f"[ID {rid}]")
+                    resumo.append(f"• {materia} ({tri}º Tri) - {data_fmt}")
+                    resumo.append(f"{desc}")
+                    resumo.append("")
+
+                    registros.append({
+                        "id": rid,
+                        "aluno": (aluno or "").strip(),
+                        "materia": materia,
+                        "dataHora": data_fmt,
+                        "descricao": desc
+                    })
+
+        row_indexes = [str(r.get("id") or "") for r in filtrados]
+
+        resumo.append("=" * 60)
+        resumo.append("Relatório gerado automaticamente pelo Sistema de Relatórios")
+
+        return jsonify({
+            "resumo": "\n".join(resumo),
+            "rowIndexes": row_indexes,
+            "registros": registros
+        })
+
+    except Exception as e:
+        app.logger.exception("Erro em /buscar_resumo")
+        return jsonify({"erro": f"Erro interno: {str(e)}"}), 500
 
 @app.route("/salvar_edicao", methods=["POST"])
 def salvar_edicao():

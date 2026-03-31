@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatta</title>
+    <link rel="stylesheet" href="/static/styles/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <!-- Overlay de transição entre telas -->
+    <div id="transition-overlay" class="transition-overlay" role="alert" aria-live="polite" aria-busy="true">
+    <div class="transition-card modern-transition-card">
+        <div class="transition-icon-wrap">
+        <i class="fa-solid fa-arrows-rotate transition-icon"></i>
+        </div>
+
+        <div id="transition-title" class="transition-title">Carregando dados…</div>
+        <div id="transition-sub" class="transition-sub">Preparando alunos e componentes curriculares.</div>
+
+        <div class="progress-wrap">
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div id="progress-text" class="small-hint">0%</div>
+        </div>
+    </div>
+    </div>
+
+    <div class="container">
+        
+        <!-- Tela de Carregamento -->
+        <div id="loading-screen" class="screen active">
+            <div class="page-shell">
+            <div class="page-hero">
+                <div class="page-hero-icon">
+                <i class="fa-solid fa-spinner"></i>
+                </div>
+                <h1 class="page-title">Carregando dados</h1>
+                <p class="page-subtitle">Conectando ao servidor e preparando o ambiente.</p>
+            </div>
+
+            <div class="page-panel" style="max-width: 620px; margin: 0 auto;">
+                <div class="loading-state-card">
+                <div class="loading-state-spinner">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </div>
+
+                <h2 class="loading-state-title">Aguarde um instante</h2>
+                <p class="loading-state-text">
+                    Estamos conectando ao servidor e carregando os dados necessários para o sistema.
+                </p>
+
+                <div class="progress-wrap" style="max-width: 360px; margin: 20px auto 0;">
+                    <div class="progress-bar">
+                    <div id="init-progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div id="init-progress-text" class="small-hint">0%</div>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Tela de Erro -->
+        <div id="error-screen" class="screen">
+            <h1>Erro ao Carregar Dados</h1>
+            <div class="alert alert-error" id="error-message">
+                Não foi possível carregar os dados do servidor.
+            </div>
+            <div class="button-group" style="flex-direction: column;">
+                <button class="btn btn-primary" onclick="inicializarSistema()">Tentar Novamente</button>
+            </div>
+        </div>
+        
+        <!-- Tela Menu Principal -->
+        <div id="menu-screen" class="screen">
+            <div class="menu-hero">
+                <div class="menu-hero-icon">
+                    <i class="fa-regular fa-file-lines"></i>
+                </div>
+                <h1 class="menu-title">
+                    Relatta
+                    <br>
+                    <span>Relatórios para Conselho de Classe</span>
+                </h1>
+                <p class="menu-subtitle">Bem-vindo! O que deseja fazer?</p>
+            </div>
+
+            <div class="menu-card-panel">
+                <button class="menu-card menu-card-primary" onclick="showScreen('form1-screen')">
+                    <div class="menu-card-icon green">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </div>
+                    <div class="menu-card-content">
+                        <h3>Preencher aluno</h3>
+                        <p>Preencha informações sobre o aluno</p>
+                    </div>
+                    <div class="menu-card-arrow">›</div>
+                </button>
+
+                <button class="menu-card" onclick="showScreen('resumo-screen')">
+                    <div class="menu-card-icon blue">
+                        <i class="fa-regular fa-clipboard"></i>
+                    </div>
+                    <div class="menu-card-content">
+                        <h3>Acompanhamento do preenchimento</h3>
+                        <p>Veja o progresso de preenchimento das fichas</p>
+                    </div>
+                    <div class="menu-card-arrow">›</div>
+                </button>
+
+                <button class="menu-card" onclick="showScreen('conselho-screen')">
+                    <div class="menu-card-icon purple">
+                        <i class="fa-regular fa-newspaper"></i>
+                    </div>
+                    <div class="menu-card-content">
+                        <h3>Emitir Ficha para Conselho</h3>
+                        <p>Gere fichas finalizadas para o conselho</p>
+                    </div>
+                    <div class="menu-card-arrow">›</div>
+                </button>
+
+                <button class="menu-card" onclick="showScreen('exportar-excel-screen')">
+                    <div class="menu-card-icon orange">
+                        <i class="fa-solid fa-download"></i>
+                    </div>
+                    <div class="menu-card-content">
+                        <h3>Exportar respostas (.xlsx)</h3>
+                        <p>Baixe todas as respostas em formato Excel</p>
+                    </div>
+                    <div class="menu-card-arrow">›</div>
+                </button>
+            </div>
+
+            <div class="menu-footer">
+                Escola Municipal Mirazinha Braga • <span id="menu-year"></span>
+            </div>
+        </div>
+
+        <!-- Tela Formulário 1 - Dados Básicos -->
+        <div id="form1-screen" class="screen">
+        <div class="page-shell">
+            <div class="page-hero">
+            <div class="page-hero-icon">
+                <i class="fa-solid fa-file-pen"></i>
+            </div>
+            <h1 class="page-title">Dados Básicos</h1>
+            <p class="page-subtitle">Selecione o professor, turma e contexto do preenchimento.</p>
+            </div>
+
+            <div class="page-panel">
+            <div class="form-grid">
+                <div class="form-group">
+                <label class="label-modern" for="nome">Professor</label>
+                <select class="select-modern" id="nome" onchange="updateFuncao()">
+                    <option value="">Nome do professor...</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="funcao">Função</label>
+                <select class="select-modern" id="funcao" disabled>
+                    <option value="">Selecione...</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="ano">Ano</label>
+                <select class="select-modern" id="ano" onchange="updateTurmas()">
+                    <option value="">Selecione...</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="turma">Turma</label>
+                <select class="select-modern" id="turma">
+                    <option value="">Selecione...</option>
+                </select>
+                </div>
+
+                <div class="form-group full">
+                <label class="label-modern" for="turno">Turno</label>
+                <select class="select-modern" id="turno">
+                    <option value="">Selecione...</option>
+                    <option value="Manhã">Manhã</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Integral">Integral</option>
+                </select>
+                </div>
+            </div>
+
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="nextToForm2()">Próximo</button>
+                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Tela Formulário 2 - Seleção de Estudante -->
+        <div id="form2-screen" class="screen">
+        <div class="page-shell">
+            <div class="page-hero">
+            <div class="page-hero-icon">
+                <i class="fa-solid fa-user-graduate"></i>
+            </div>
+            <h1 class="page-title">Selecionar Estudante</h1>
+            <p class="page-subtitle">Escolha o aluno e registre as informações pedagógicas.</p>
+            </div>
+
+            <div class="page-panel">
+            <div id="info-display" class="page-info-banner"></div>
+
+            <div id="perfil-turma-section" class="panel-section hidden-field">
+                <h3 class="panel-section-title">Perfil da Turma <span id="perfil-status"></span></h3>
+                <textarea class="textarea-modern" id="perfil-turma" placeholder="Descreva o perfil geral da turma..."></textarea>
+                <small style="display:block; margin-top:8px; color:#6b7280;">
+                Este campo é preenchido apenas uma vez por turma e será replicado automaticamente.
+                </small>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group full">
+                <label class="label-modern" for="aluno">Estudante</label>
+                <select class="select-modern" id="aluno" onchange="showConditionalFields()">
+                    <option value="">Selecione...</option>
+                </select>
+                </div>
+
+                <div class="form-group full">
+                <label class="label-modern" for="materia">Componente Curricular</label>
+                <select class="select-modern" id="materia">
+                    <option value="">Selecione...</option>
+                </select>
+                </div>
+            </div>
+
+            <div id="conditional-fields" class="panel-section hidden-field">
+                <h3 class="panel-section-title">Informações Complementares</h3>
+                <div class="form-grid">
+                <div class="form-group">
+                    <label class="label-modern" for="papi">PAPI?</label>
+                    <select class="select-modern" id="papi">
+                    <option value="Sim">Sim</option>
+                    <option value="Não">Não</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-modern" for="inclusao">Inclusão?</label>
+                    <select class="select-modern" id="inclusao">
+                    <option value="Sim">Sim</option>
+                    <option value="Não">Não</option>
+                    </select>
+                </div>
+                </div>
+            </div>
+
+            <div id="texto-padrao-wrapper" class="panel-section hidden-field">
+                <h3 class="panel-section-title">Critérios de avaliação</h3>
+                <div id="texto-padrao" class="materia-descricao" aria-live="polite"></div>
+            </div>
+
+            <div class="form-group" style="margin-top:18px;">
+                <label class="label-modern" for="descricao">Descrição</label>
+                <textarea class="textarea-modern" id="descricao" placeholder="Digite aqui uma descrição..."></textarea>
+            </div>
+
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="finalizarPreenchimento()">Salvar</button>
+                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Tela Final -->
+        <div id="final-screen" class="screen">
+            <h1>✅ Sucesso!</h1>
+            <div class="alert alert-info">
+                <strong>Obrigado!</strong> Registrado com sucesso!
+            </div>
+
+            <div class="button-group" style="flex-direction: column;">
+                <button class="btn btn-primary" onclick="continuarPreenchendo()">Continuar preenchendo</button>
+                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+            </div>
+        </div>
+
+        <!-- Tela Resumo -->
+        <div id="resumo-screen" class="screen">
+        <div class="page-shell">
+            <div class="page-hero">
+            <div class="page-hero-icon">
+                <i class="fa-regular fa-clipboard"></i>
+            </div>
+            <h1 class="page-title">Resumo de Preenchimentos</h1>
+            <p class="page-subtitle">Filtre e acompanhe os registros realizados pelos professores.</p>
+            </div>
+
+            <div class="page-panel">
+            <div class="form-grid">
+                <div class="form-group full">
+                <label class="label-modern" for="professor-resumo">Nome do professor</label>
+                <select class="select-modern" id="professor-resumo">
+                    <option value="">Selecione...</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="filtro-trimestre">Trimestre</label>
+                <select class="select-modern" id="filtro-trimestre">
+                    <option value="">Todos</option>
+                    <option value="1">1º</option>
+                    <option value="2">2º</option>
+                    <option value="3">3º</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="filtro-mes">Mês do preenchimento</label>
+                <select class="select-modern" id="filtro-mes">
+                    <option value="">Todos</option>
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="filtro-aluno">Nome do aluno</label>
+                <input class="input-modern" type="text" id="filtro-aluno" placeholder="Digite o nome do aluno">
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="filtro-ano">Ano</label>
+                <select class="select-modern" id="filtro-ano">
+                    <option value="">Todos</option>
+                </select>
+                </div>
+
+                <div class="form-group full">
+                <label class="label-modern" for="filtro-turma">Turma</label>
+                <select class="select-modern" id="filtro-turma">
+                    <option value="">Todas</option>
+                </select>
+                </div>
+            </div>
+
+            <input type="hidden" id="row-index" value="">
+
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="buscarResumo()" id="btn-buscar">Buscar Resumo</button>
+                <button class="btn btn-danger" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
+            </div>
+
+            <div id="resumo-loading" class="loading-text" style="display:none;">Carregando resumo...</div>
+            <div id="cards-resumo" class="cards-grid"></div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Tela Exportar Excel -->
+        <div id="exportar-excel-screen" class="screen">
+        <div class="page-shell">
+            <div class="page-hero">
+            <div class="page-hero-icon">
+                <i class="fa-solid fa-download"></i>
+            </div>
+            <h1 class="page-title">Exportar Excel (.xlsx)</h1>
+            <p class="page-subtitle">
+                Escolha qualquer combinação de filtros para baixar as respostas em Excel.
+            </p>
+            </div>
+
+            <div class="page-panel">
+            <div class="page-info-banner">
+                Você pode deixar os campos em branco para exportar todos os registros disponíveis.
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group full">
+                <label class="label-modern" for="f_professor">Professor(a)</label>
+                <select class="select-modern" id="f_professor">
+                    <option value="">(todos)</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="f_trimestre">Trimestre</label>
+                <select class="select-modern" id="f_trimestre">
+                    <option value="">(todos)</option>
+                    <option value="1">1º</option>
+                    <option value="2">2º</option>
+                    <option value="3">3º</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="f_materia">Componente Curricular</label>
+                <select class="select-modern" id="f_materia">
+                    <option value="">(todas)</option>
+                    <option>Língua Portuguesa</option>
+                    <option>Matemática</option>
+                    <option>História</option>
+                    <option>Geografia</option>
+                    <option>Ciências</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="f_turno">Turno</label>
+                <select class="select-modern" id="f_turno">
+                    <option value="">(todos)</option>
+                    <option>Manhã</option>
+                    <option>Tarde</option>
+                    <option>Integral</option>
+                </select>
+                </div>
+
+                <div class="form-group">
+                <label class="label-modern" for="f_turma">
+                    Turma <small>(ex.: "1º Ano A" ou "1º A")</small>
+                </label>
+                <input class="input-modern" id="f_turma" placeholder='ex.: 1º Ano A' />
+                </div>
+            </div>
+
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="exportarExcel()">
+                <i class="fa-solid fa-file-arrow-down"></i>
+                Exportar Excel
+                </button>
+                <button class="btn btn-gray" onclick="showScreen('menu-screen')">
+                Voltar ao Menu
+                </button>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Tela Conselho de Classe -->
+        <div id="conselho-screen" class="screen">
+            <div class="conselho-header">
+                <h1>📋 Ficha para Conselho de Classe</h1>
+                <div class="conselho-subtitle">Visualização completa dos relatórios por turma</div>
+            </div>
+            
+            <div class="conselho-controls">
+                <div class="controls-row">
+                    <div class="form-group">
+                        <label for="turma-conselho">Selecione a turma:</label>
+                        <select id="turma-conselho">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="turno-conselho">Selecione o turno:</label>
+                        <select id="turno-conselho">
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Integral">Integral</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="carregarFichasTurma()" id="btn-buscar-turma">
+                        🔍 Buscar Alunos
+                    </button>
+
+                    <button class="btn btn-pdf" onclick="abrirModalPDF()" id="btn-exportar" style="display:none;">
+                        📄 Exportar PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status e mensagens -->
+            <div id="conselho-status" class="alert" style="display:none;"></div>
+            <div id="conselho-loading" class="loading-text" style="display:none;">
+                Carregando dados da turma...
+            </div>
+
+            <!-- Área de exibição das fichas -->
+            <div id="ficha-turma-completa" class="ficha-turma-completa" style="display:none;">
+                <div class="turma-info-header">
+                    <h2 id="turma-titulo">Relatórios da Turma</h2>
+                    <div class="alunos-count" id="alunos-count">0 alunos encontrados</div>
+                    <div id="perfil-turma-display" class="perfil-turma-info" style="display:none;"></div>
+                </div>
+                <div id="fichas-container"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-danger" onclick="showScreen('menu-screen')">🏠 Voltar ao Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para inserir email -->
+    <div id="modal-email" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalPDF()">&times;</span>
+            <h3>📧 Exportar PDF por Email</h3>
+            <div class="form-group">
+                <label for="email-destinatario">Digite seu email:</label>
+                <input type="email" id="email-destinatario" placeholder="seu.email@exemplo.com" required>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="exportarPDF()">✉️ Enviar PDF</button>
+                <button class="btn btn-gray" onclick="fecharModalPDF()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTINUA NO PRÓXIMO BLOCO COM TODO O JAVASCRIPT -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

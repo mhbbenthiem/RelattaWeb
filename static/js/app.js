@@ -1,1061 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatta</title>
-    <style>
-        /* Overlay de transição ao avançar para a próxima tela */
-        .transition-overlay{
-        position:fixed; inset:0; z-index:1500;
-        background:rgba(0,0,0,.45);
-        display:none; align-items:center; justify-content:center;
-        animation: fadeIn .2s ease;
-        }
-        .transition-card{
-        width:min(560px, 92vw); background:#fff; border-radius:14px;
-        padding:24px; box-shadow:0 12px 30px rgba(0,0,0,.25);
-        text-align:center;
-        }
-        .transition-title{ font-size:18px; font-weight:700; color:#333; margin-top:12px; }
-        .transition-sub{ color:#666; margin-top:6px; }
-        .progress-wrap{ margin-top:16px; text-align:left; }
-        .progress-bar{
-        height:10px; background:#e9ecef; border-radius:999px; overflow:hidden;
-        }
-        .progress-fill{
-        height:100%; width:0%;
-        background:linear-gradient(90deg,#62b354,#6362c5);
-        transition: width .25s ease;
-        }
-        .small-hint{ font-size:12px; color:#777; margin-top:8px; }
-
-        /* spinner + animações */
-        .spinner{
-        width:36px; height:36px;
-        border:4px solid #e9ecef;
-        border-top-color:#6362c5;
-        border-radius:50%;
-        margin:0 auto;
-        animation:spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
-    </style>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #434276;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-            font-size: 16px;
-        }
-
-        select, textarea, input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            font-size: 16px;
-            background-color: #fff;
-            transition: all 0.3s ease;
-        }
-
-        select:focus, textarea:focus, input:focus {
-            outline: none;
-            border-color: #4CAF50;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 5px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-
-        .btn-primary {
-            background-color: #62b354;
-            color: #ffffff;
-        }
-
-        .btn-primary:hover {
-            background-color: #74af6a;
-        }
-
-        .btn-secondary {
-            background-color: #b8b7b5;
-            color: #000;
-        }
-
-        .btn-secondary:hover {
-            background-color: #dfdfdd;
-        }
-
-        .btn-danger {
-            background-color: #FF7F7F;
-            color: #000;
-        }
-
-        .btn-danger:hover {
-            background-color: #FF9999;
-        }
-
-        .btn-gray {
-            background-color: #b8b7b5;
-            color: black;
-        }
-
-        .btn-gray:hover {
-            background-color: #dfdfdd;
-        }
-
-        .btn-pdf {
-            background: #62b354;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-pdf:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .screen {
-            display: none;
-            animation: slideIn 0.4s ease-out;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .info-display {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-            color: #495057;
-            border-left: 4px solid #807f7d;
-        }
-
-        .result-area {
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: monospace;
-            white-space: pre-wrap;
-            line-height: 1.6;
-        }
-
-        .hidden-field {
-            display: none;
-        }
-
-        .alert {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .conditional-fields {
-            background: #f0f8ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border-left: 4px solid #cfade6;
-        }
-
-        .perfil-turma-field {
-            background: #fff3e0;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border-left: 4px solid #ff9800;
-        }
-
-        .perfil-turma-field.readonly {
-            background: #f5f5f5;
-            border-left-color: #9e9e9e;
-        }
-
-        .perfil-turma-field .label-special {
-            color: #e65100;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .perfil-turma-field.readonly .label-special {
-            color: #666;
-        }
-
-        .loading-spinner {
-            text-align: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4ca8af;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .conselho-header {
-            background: linear-gradient(135deg, #62b354 0%, #6362c5 100%);
-            color: black;
-            padding: 30px;
-            border-radius: 15px 15px 0 0;
-            text-align: center;
-            margin-bottom: 0;
-        }
-
-        .conselho-header h1 {
-            color: white;
-            margin: 0;
-            font-size: 32px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .conselho-subtitle {
-            margin-top: 10px;
-            font-size: 18px;
-            opacity: 0.9;
-        }
-
-        .conselho-controls {
-            background: white;
-            padding: 25px;
-            border-radius: 0 0 15px 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
-        .controls-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto auto;
-            gap: 20px;
-            align-items: end;
-        }
-
-        .ficha-container {
-            margin-bottom: 40px;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .ficha-container:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .student-header {
-            background: linear-gradient(135deg, #62b354 0%, #6362c5 100%);
-            color: white;
-            padding: 25px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .student-photo {
-            flex-shrink: 0;
-        }
-
-        .photo-placeholder {
-            width: 80px;
-            height: 80px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            border: 3px solid rgba(255,255,255,0.3);
-        }
-
-        .student-info {
-            flex-grow: 1;
-        }
-
-        .student-info h2 {
-            margin: 0 0 15px 0;
-            font-size: 28px;
-            font-weight: 600;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .student-details {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .detail-item {
-            background: rgba(255,255,255,0.15);
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
-        }
-
-        .perfil-turma-info {
-            background: rgba(255,255,255,0.1);
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 14px;
-            font-style: italic;
-        }
-
-        .trimestres-container {
-            display: flex;
-            min-height: 400px;
-        }
-
-        .trimestre {
-            flex: 1;
-            border-right: 2px solid #e9ecef;
-            padding: 0;
-        }
-
-        .trimestre:last-child {
-            border-right: none;
-        }
-
-        .trimestre-title {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            margin: 0;
-            padding: 20px;
-            font-size: 18px;
-            font-weight: 600;
-            color: #495057;
-            border-bottom: 2px solid #e9ecef;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .trimestre-content {
-            padding: 20px;
-            min-height: 350px;
-            background: #fafafa;
-        }
-
-        .materia-item {
-            background: white;
-            border-left: 4px solid #434276;
-            padding: 18px;
-            margin-bottom: 15px;
-            border-radius: 0 12px 12px 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .materia-item:hover {
-            transform: translateX(8px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            border-left-color: #434276;
-        }
-
-        .materia-nome {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .materia-descricao {
-            color: #555;
-            line-height: 1.6;
-            font-size: 14px;
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-
-        .professor-info {
-            color: #666;
-            font-size: 12px;
-            font-style: italic;
-            text-align: right;
-            border-top: 1px solid #eee;
-            padding-top: 8px;
-        }
-
-        .empty-message {
-            color: #999;
-            font-style: italic;
-            text-align: center;
-            margin-top: 50px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            border: 2px dashed #ddd;
-        }
-
-        .loading {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-        }
-
-        .export-section {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 25px;
-            border-radius: 15px;
-            margin: 30px 0;
-            text-align: center;
-            border: 2px solid #dee2e6;
-        }
-
-        .export-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 15px;
-        }
-
-        .email-input {
-            max-width: 400px;
-            margin: 0 auto 20px auto;
-        }
-
-        .ficha-turma-completa {
-            margin-top: 30px;
-        }
-
-        .turma-info-header {
-            background: linear-gradient(135deg, #62b354 0%, #6362c5 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px 12px 0 0;
-            text-align: center;
-        }
-
-        .turma-info-header h2 {
-            margin: 0;
-            font-size: 24px;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .alunos-count {
-            margin-top: 10px;
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-
-            .controls-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .student-header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .student-photo {
-                margin-bottom: 15px;
-            }
-
-            .trimestres-container {
-                flex-direction: column;
-            }
-
-            .trimestre {
-                margin-bottom: 20px;
-                border-right: none;
-                border-bottom: 2px solid #e9ecef;
-            }
-
-            .trimestre:last-child {
-                border-bottom: none;
-            }
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            animation: slideIn 0.3s ease;
-        }
-
-        .modal h3 {
-            margin-bottom: 20px;
-            color: #333;
-            text-align: center;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-        }
-
-        .close:hover {
-            color: #000;
-        }
-
-        /* CORREÇÃO 1: Estilos para melhor feedback visual */
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .loading-text {
-            color: #666;
-            font-style: italic;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border: 1px solid #f5c6cb;
-        }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border: 1px solid #c3e6cb;
-        }
-
-        .cards-grid{
-        display:grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap:12px;
-        margin-top:12px;
-        }
-        .card-resumo{
-        border:1px solid #020202;
-        border-radius:12px;
-        padding:12px;
-        background:#fff;
-        box-shadow:0 1px 2px rgba(0,0,0,.04);
-        }
-        .card-head{
-        display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;
-        }
-        .badge{
-        padding:2px 8px; border:1px solid #e5e7eb; border-radius:9999px; background:#f9fafb; font-size:12px;
-        }
-        .card-meta{ font-size:12px; opacity:.75; }
-        .card-desc{
-        white-space:pre-wrap; /* mantém quebras e espaçamentos da descrição */
-        margin-top:8px; line-height:1.4;
-        }
-        .btn-sm{ font-size:12px; padding:4px 8px; border:1px solid #f7f30f; border-radius:6px; background:#f9fafb; cursor:pointer; }
-        .btn-sm:hover{ background:#f0ed3a; }
-    </style>
-</head>
-<!-- Overlay de transição entre telas -->
-<div id="transition-overlay" class="transition-overlay" role="alert" aria-live="polite" aria-busy="true">
-  <div class="transition-card">
-    <div class="spinner" style="margin-bottom:10px;"></div>
-    <div id="transition-title" class="transition-title">Carregando dados…</div>
-    <div id="transition-sub" class="transition-sub">Preparando alunos e componentes curriculares.</div>
-    <div class="progress-wrap">
-      <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
-      <div id="progress-text" class="small-hint">0%</div>
-    </div>
-  </div>
-</div>
-<body>
-    <div class="container">
-        
-        <!-- Tela de Carregamento -->
-        <div id="loading-screen" class="screen active">
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-                <h2>Carregando dados...</h2>
-                <p>Aguarde enquanto conectamos com o servidor e carregamos os dados.</p>
-                <div class="progress-wrap" style="max-width: 300px; margin: 20px auto;">
-                    <div class="progress-bar"><div id="init-progress-fill" class="progress-fill"></div></div>
-                    <div id="init-progress-text" class="small-hint">0%</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tela de Erro -->
-        <div id="error-screen" class="screen">
-            <h1>Erro ao Carregar Dados</h1>
-            <div class="alert alert-error" id="error-message">
-                Não foi possível carregar os dados do servidor.
-            </div>
-            <div class="button-group" style="flex-direction: column;">
-                <button class="btn btn-primary" onclick="inicializarSistema()">Tentar Novamente</button>
-            </div>
-        </div>
-        
-        <!-- Tela Menu Principal -->
-        <div id="menu-screen" class="screen">
-            <h1>Preenchimento de fichas para Conselho de Classe</h1>
-            <p style="text-align: center; margin-bottom: 30px; color: #666;">Bem-vindo! O que deseja fazer?</p>
-            
-            <div class="button-group" style="flex-direction: column;">
-                <button class="btn btn-primary" onclick="showScreen('form1-screen')">Preencher aluno</button>
-                <button class="btn btn-secondary" onclick="showScreen('resumo-screen')">Acompanhamento do preenchimento</button>
-                <button class="btn btn-secondary" onclick="showScreen('conselho-screen')">Emitir Ficha para Conselho</button>
-                <button class="btn btn-secondary" onclick="showScreen('exportar-excel-screen')">Exportar respostas (.xlsx)</button>
-            </div>
-        </div>
-
-        <!-- Tela Formulário 1 - Dados Básicos -->
-        <div id="form1-screen" class="screen">
-            <h1>Dados Básicos</h1>
-            
-            <div class="form-group">
-                <label for="nome">Nome:</label>
-                <select id="nome" onchange="updateFuncao()">
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="ano">Ano:</label>
-                <select id="ano" onchange="updateTurmas()">
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="turno">Turno:</label>
-                <select id="turno">
-                    <option value="">Selecione...</option>
-                    <option value="Manhã">Manhã</option>
-                    <option value="Tarde">Tarde</option>
-                    <option value="Integral">Integral</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="turma">Turma:</label>
-                <select id="turma">
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="funcao">Função:</label>
-                <select id="funcao" disabled>
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <div class="button-group">
-                <button class="btn btn-primary" onclick="nextToForm2()">Próximo</button>
-                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
-            </div>
-        </div>
-
-        <!-- Tela Formulário 2 - Seleção de Estudante -->
-        <div id="form2-screen" class="screen">
-            <h1>Selecionar Estudante</h1>
-            
-            <div id="info-display" class="info-display"></div>
-
-            <div id="perfil-turma-section" class="perfil-turma-field hidden-field">
-                <label class="label-special" for="perfil-turma">
-                     Perfil da Turma:
-                    <span id="perfil-status"></span>
-                </label>
-                <textarea id="perfil-turma" placeholder="Descreva o perfil geral da turma (características, comportamento, necessidades específicas, etc.)"></textarea>
-                <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
-                     Este campo é preenchido apenas uma vez por turma e será replicado automaticamente nos próximos preenchimentos.
-                </small>
-            </div>
-
-            <div class="form-group">
-                <label for="aluno">Estudante:</label>
-                <select id="aluno" onchange="showConditionalFields()">
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="materia">Componente Curricular:</label>
-                <select id="materia">
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <div id="conditional-fields" class="conditional-fields hidden-field">
-
-                <div class="form-group">
-                    <label for="papi">PAPI?</label>
-                    <select id="papi">
-                        <option value="Sim">Sim</option>
-                        <option value="Não">Não</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="inclusao">Inclusão?</label>
-                    <select id="inclusao">
-                        <option value="Sim">Sim</option>
-                        <option value="Não">Não</option>
-                    </select>
-                </div>
-            </div>
-            <div id="texto-padrao-wrapper" class="form-group hidden-field">
-            <label>Critérios de avaliação</label>
-            <div id="texto-padrao" class="materia-descricao" aria-live="polite"></div>
-            </div>
-            <div class="form-group">
-                <label for="descricao">Descrição:</label>
-                <textarea id="descricao" placeholder="Digite aqui uma descrição..."></textarea>
-            </div>
-
-            <div class="button-group">
-                 <button class="btn btn-primary" onclick="finalizarPreenchimento()">Salvar</button>
-                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
-            </div>
-        </div>
-
-        <!-- Tela Final -->
-        <div id="final-screen" class="screen">
-            <h1>Sucesso!</h1>
-            <div class="alert alert-info">
-                <strong>Obrigado!</strong> Registrado com sucesso!
-            </div>
-
-            <div class="button-group" style="flex-direction: column;">
-                <button class="btn btn-primary" onclick="continuarPreenchendo()">Continuar preenchendo</button>
-                <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
-            </div>
-        </div>
-
-        <!-- Tela Resumo  -->
-        <div id="resumo-screen" class="screen">
-            <h1>Resumo de Preenchimentos</h1>
-            
-            <div class="form-group">
-                <label for="professor-resumo">Selecione o nome da professora:</label>
-                <select id="professor-resumo">
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <input type="hidden" id="row-index" value="">
-
-            <div class="button-group">
-                <button class="btn btn-primary" onclick="buscarResumo()" id="btn-buscar">Buscar Resumo</button>
-            </div>
-
-            <div id="resumo-loading" class="loading-text" style="display:none;">
-                Carregando resumo...
-            </div>
-
-            
-            <div id="cards-resumo" class="cards-grid"></div>
-
-
-            <div class="button-group">
-                <button class="btn btn-danger" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
-            </div>
-        </div>
-        <!-- Tela Exportar Excel -->
-        <div id="exportar-excel-screen" class="screen">
-        <h1>Exportar Excel (.xlsx)</h1>
-        <p style="text-align:center; color:#666; margin-bottom:16px;">
-            Escolha qualquer combinação de filtros (deixe em branco se não quiser filtrar).
-        </p>
-
-        <div class="form-group">
-            <label for="f_professor">Professor(a)</label>
-            <select id="f_professor">
-            <option value="">(todos)</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="f_trimestre">Trimestre</label>
-            <select id="f_trimestre">
-            <option value="">(todos)</option>
-            <option value="1">1º</option>
-            <option value="2">2º</option>
-            <option value="3">3º</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="f_materia">Componente Curricular</label>
-            <select id="f_materia">
-            <option value="">(todas)</option>
-            <option>Língua Portuguesa</option>
-            <option>Matemática</option>
-            <option>História</option>
-            <option>Geografia</option>
-            <option>Ciências</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="f_turno">Turno</label>
-            <select id="f_turno">
-            <option value="">(todos)</option>
-            <option>Manhã</option>
-            <option>Tarde</option>
-            <option>Integral</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="f_turma">Turma <small>(ex.: “1º Ano A” ou “1º A”)</small></label>
-            <input id="f_turma" placeholder="ex.: 1º Ano A" />
-        </div>
-
-        <div class="button-group">
-            <button class="btn btn-primary" onclick="exportarExcel()">Exportar Excel</button>
-            <button class="btn btn-gray" onclick="showScreen('menu-screen')">Voltar ao Menu</button>
-        </div>
-        </div>
-
-
-        <!-- Tela Conselho de Classe -->
-        <div id="conselho-screen" class="screen">
-            <div class="conselho-header">
-                <h1>📋 Ficha para Conselho de Classe</h1>
-                <div class="conselho-subtitle">Visualização completa dos relatórios por turma</div>
-            </div>
-            
-            <div class="conselho-controls">
-                <div class="controls-row">
-                    <div class="form-group">
-                        <label for="turma-conselho">Selecione a turma:</label>
-                        <select id="turma-conselho">
-                            <option value="">Selecione...</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="turno-conselho">Selecione o turno:</label>
-                        <select id="turno-conselho">
-                            <option value="Manhã">Manhã</option>
-                            <option value="Tarde">Tarde</option>
-                            <option value="Integral">Integral</option>
-                        </select>
-                    </div>
-
-                    <button class="btn btn-primary" onclick="carregarFichasTurma()" id="btn-buscar-turma">
-                        🔍 Buscar Alunos
-                    </button>
-
-                    <button class="btn btn-pdf" onclick="abrirModalPDF()" id="btn-exportar" style="display:none;">
-                         Exportar PDF
-                    </button>
-                </div>
-            </div>
-
-            <!-- Status e mensagens -->
-            <div id="conselho-status" class="alert" style="display:none;"></div>
-            <div id="conselho-loading" class="loading-text" style="display:none;">
-                Carregando dados da turma...
-            </div>
-
-            <!-- Área de exibição das fichas -->
-            <div id="ficha-turma-completa" class="ficha-turma-completa" style="display:none;">
-                <div class="turma-info-header">
-                    <h2 id="turma-titulo">Relatórios da Turma</h2>
-                    <div class="alunos-count" id="alunos-count">0 alunos encontrados</div>
-                    <div id="perfil-turma-display" class="perfil-turma-info" style="display:none;"></div>
-                </div>
-                <div id="fichas-container"></div>
-            </div>
-
-            <div class="button-group">
-                <button class="btn btn-danger" onclick="showScreen('menu-screen')">🏠 Voltar ao Menu</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para inserir email -->
-    <div id="modal-email" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="fecharModalPDF()">&times;</span>
-            <h3> Exportar PDF por Email</h3>
-            <div class="form-group">
-                <label for="email-destinatario">Digite seu email:</label>
-                <input type="email" id="email-destinatario" placeholder="seu.email@exemplo.com" required>
-            </div>
-            <div class="button-group">
-                <button class="btn btn-primary" onclick="exportarPDF()">✉️ Enviar PDF</button>
-                <button class="btn btn-gray" onclick="fecharModalPDF()">Cancelar</button>
-            </div>
-        </div>
-    </div>
-    <script>
     function obterTrimestreAtual(date = new Date()) {
     const m = date.getMonth() + 1; 
     if (m >= 2 && m <= 5)  return "1";
     if (m >= 6 && m <= 9)  return "2";
     return "3";
     }
-    </script>
-    <script>
     // filtro trimestre -> ano -> matéria
     const TEXTOS_PADRAO_MATERIA = {
     "1": {
@@ -1170,8 +118,6 @@
         }
     }
     };
-    </script>
-    <script>
     // Helpers do overlay
     function showTransition(title="Carregando…", sub="Aguarde um instante.") {
     const o = document.getElementById('transition-overlay');
@@ -1244,9 +190,6 @@
     // 6) global default
     return global.default || '';
     }
-    </script>
-
-    <script>
     function exibirTextoPadraoMateria() {
     const selMat  = document.getElementById('materia');
     const wrapper = document.getElementById('texto-padrao-wrapper');
@@ -1266,13 +209,12 @@
     box.textContent = texto;
     toggleHidden(wrapper, !!texto);
     }
-    </script>
-    <script>
+
     // Preenche a lista de professores na tela de exportação
     function preencherProfessoresExport() {
     try {
         const nomes = [...new Set((dadosCarregados?.professores || [])
-        .map(p => p.Professor || p.nome)
+        .map(p => p.professor || p.nome)
         .filter(Boolean))];
         populateSelect('f_professor', nomes);
         // adiciona manualmente a opção (todos)
@@ -1325,9 +267,9 @@
         preencherProfessoresExport();
     }
     });
-    </script>
+    
 
-    <script>
+    
  
     // chama UMA vez quando o DOM estiver pronto
     document.addEventListener('DOMContentLoaded', () => {
@@ -1464,7 +406,8 @@
                 <strong>Verificações:</strong>
                 <ul style="margin-top: 10px; margin-left: 20px;">
                     <li>As variáveis SUPABASE_URL e SUPABASE_KEY estão configuradas?</li>
-                    <li>As tabelas 'profs', 'alunos' e 'respostas' existem no Supabase?</li>
+                    <li>As tabelas "profs" e "alunos" têm registros?</li>
+                    <li>As policies do Supabase permitem leitura?</li>
                     <li>As colunas do banco estão nomeadas corretamente?</li>
                     <li>O deploy do Vercel está respondendo normalmente?</li>
                 </ul>
@@ -1563,16 +506,17 @@
                 console.log('Dados carregados:', dadosCarregados);
                 
                 if (!dadosCarregados.professores || dadosCarregados.professores.length === 0) {
-                    throw new Error('Nenhum professor encontrado. Verifique a aba "profs" no arquivo Excel.');
+                    throw new Error('Nenhum professor encontrado na tabela "profs" do Supabase.');
                 }
                 
                 if (!dadosCarregados.alunos || dadosCarregados.alunos.length === 0) {
-                    throw new Error('Nenhum aluno encontrado. Verifique a aba "alunos" no arquivo Excel.');
+                    throw new Error('Nenhum aluno encontrado na tabela "alunos" do Supabase.');
                 }
                 
-                const nomesUnicos = [...new Set(dadosCarregados.professores.map(p => p.Professor || p.nome))];
+                const nomesUnicos = [...new Set(dadosCarregados.professores.map(p => p.professor || p.nome))];
                 populateSelect('nome', nomesUnicos);
                 populateSelect('professor-resumo', nomesUnicos);
+                preencherFiltrosResumo();
                 
                 const anos = [...new Set(dadosCarregados.alunos.map(a => a.ano || a.Ano))];
                 populateSelect('ano', anos.filter(Boolean).sort());
@@ -1605,10 +549,10 @@
         // ===============================
         function updateFuncao() {
             const nome = document.getElementById('nome').value;
-            const professor = dadosCarregados.professores.find(p => p.nome === nome);
+            const professor = dadosCarregados.professores.find(p => p.professor === nome);
 
             const funcaoSelect = document.getElementById('funcao');
-            funcaoSelect.innerHTML = '<option value="">Selecione...</option>';
+            funcaoSelect.innerHTML = '<option value="">Função do professor...</option>';
 
             if (professor) {
                 const funcao = professor.funcao || '';
@@ -1882,65 +826,106 @@
         // ===============================
         // FUNÇÕES DE RESUMO CORRIGIDAS
         // ===============================
+       function preencherFiltrosResumo() {
+            const anos = [...new Set(
+                (dadosCarregados.alunos || [])
+                    .map(a => a.ano)
+                    .filter(Boolean)
+            )].sort();
+
+            const turmas = [...new Set(
+                (dadosCarregados.alunos || [])
+                    .map(a => a.turma)
+                    .filter(Boolean)
+            )].sort();
+
+            const selAno = document.getElementById('filtro-ano');
+            const selTurma = document.getElementById('filtro-turma');
+
+            if (selAno) {
+                selAno.innerHTML = '<option value="">Todos</option>';
+                anos.forEach(ano => {
+                    const opt = document.createElement('option');
+                    opt.value = ano;
+                    opt.textContent = ano;
+                    selAno.appendChild(opt);
+                });
+            }
+
+            if (selTurma) {
+                selTurma.innerHTML = '<option value="">Todas</option>';
+                turmas.forEach(turma => {
+                    const opt = document.createElement('option');
+                    opt.value = turma;
+                    opt.textContent = turma;
+                    selTurma.appendChild(opt);
+                });
+            }
+        }
         // Buscar e montar os cards
         async function buscarResumo() {
         const professor = document.getElementById('professor-resumo').value;
+        const trimestre = document.getElementById('filtro-trimestre').value;
+        const mes = document.getElementById('filtro-mes').value;
+        const aluno = document.getElementById('filtro-aluno').value.trim();
+        const ano = document.getElementById('filtro-ano').value;
+        const turma = document.getElementById('filtro-turma').value;
+
         if (!professor) {
             alert('Selecione um professor.');
             return;
         }
 
         const btnBuscar = document.getElementById('btn-buscar');
-        const resultadoDiv = document.getElementById('resumo-resultado');
 
         try {
-            // loading/UX
             showLoading('resumo-loading', true);
             hideStatus('resumo-status');
             btnBuscar.disabled = true;
             btnBuscar.textContent = 'Carregando...';
 
             const response = await fetch('/buscar_resumo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ professor })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    professor,
+                    trimestre,
+                    mes,
+                    aluno,
+                    ano,
+                    turma
+                })
             });
 
             const data = await response.json();
 
             if (data.erro) {
-            showStatus('resumo-status', `Erro: ${data.erro}`, 'error');
-            resultadoDiv.textContent = 'Erro ao carregar resumo.';
-            return;
+                showStatus('resumo-status', `Erro: ${data.erro}`, 'error');
+                return;
             }
 
-            // Definir o row-index a partir de rowIndexes
             document.getElementById('row-index').value =
-            (Array.isArray(data.rowIndexes) && data.rowIndexes.length > 0)
-                ? String(data.rowIndexes[0])
-                : '';
+                (Array.isArray(data.rowIndexes) && data.rowIndexes.length > 0)
+                    ? String(data.rowIndexes[0])
+                    : '';
 
-            // Monta os CARDS a partir do resumo de texto
             if (Array.isArray(data.registros) && data.registros.length) {
-            montarCardsResumoFromJson(data.registros);
+                montarCardsResumoFromJson(data.registros);
             } else {
-            montarCardsResumo(data.resumo); 
+                montarCardsResumo(data.resumo || 'Sem registros.');
             }
 
-       
             showStatus('resumo-status', 'Resumo carregado com sucesso!', 'info');
 
         } catch (error) {
             console.error('Erro ao buscar resumo:', error);
             showStatus('resumo-status', 'Erro de conexão ao buscar resumo.', 'error');
-            resultadoDiv.textContent = 'Erro de conexão.';
-   
         } finally {
             showLoading('resumo-loading', false);
             btnBuscar.disabled = false;
             btnBuscar.textContent = 'Buscar Resumo';
         }
-        }
+    }
         function montarCardsResumoFromJson(registros) {
             const container = document.getElementById('cards-resumo');
             if (!container) return;
@@ -2375,6 +1360,8 @@
             document.getElementById('email-destinatario').value = '';
         }
 
+ 
+
         async function exportarPDF() {
             const email = document.getElementById('email-destinatario').value;
             if (!email) {
@@ -2436,7 +1423,9 @@
             console.log('Página carregada. Iniciando sistema...');
             inicializarSistema();
         };
-
-    </script>
-</body>
-</html>
+        document.addEventListener('DOMContentLoaded', () => {
+            const yearEl = document.getElementById('menu-year');
+            if (yearEl) {
+                yearEl.textContent = new Date().getFullYear();
+            }
+        });
